@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: white
+        }
+
+        /* CSS Custom Properties */
+        :root {
+            --primary-blue: #007BFF;
+            --primary-blue-light: #F0F7FF;
+            --primary-blue-dark: #0056B3;
+            --success-green: #28A745;
+            --danger-red: #DC3545;
+            --warning-yellow: #FFC107;
+            --light-gray: #F8F9FA;
+            --medium-gray: #414243;
+            --dark-gray: #000000;
+            --sidebar-collapsed: 61px;
+            --sidebar-expanded: 274px;
+            --patient-queue-width: -8px;
+        }
+
+         /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-collapsed);
+            background: repeat-y;
+            border-right: 1px solid #E9ECEF;
+            z-index: 1000;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #E9ECEF;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar.expanded .sidebar-header {
+            justify-content: flex-start;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .logo {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar-nav {
+            padding: 50px 0;
+        }
+
+        .sidebar-item {
+            position: relative;
+            margin: 30px 15px;
+            cursor: pointer;
+        }
+
+        .sidebar-icon {
+            
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            height: 38px;
+            border-radius: 12px;
+            font-size: 21px;
+            color: var(--medium-gray);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            
+        }
+
+        .sidebar-icon:hover {
+            transform: scale(1.05);
+            background-color: rgba(0, 123, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .sidebar-icon.active {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transform: translateX(2px);
+        }
+
+        .sidebar-icon.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 0 2px 2px 0;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { height: 0; }
+            to { height: 100%; }
+        }
+
+        .sidebar-text {
+            margin-left: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-text {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar.expanded .sidebar-icon {
+            justify-content: flex-start;
+            padding-left: 12px;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: var(--dark-gray);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: var(--dark-gray);
+        }
+
+        .sidebar:not(.expanded) .sidebar-item:hover .tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 28px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #E9ECEF;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--medium-gray);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        /* Patient Queue Panel */
+        .patient-queue {
+            position: fixed;
+            left: var(--sidebar-collapsed);
+            top: 0;
+            width: var(--patient-queue-width);
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #E9ECEF;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+        }
+
+        .sidebar.expanded + .patient-queue {
+            left: var(--sidebar-expanded);
+        }
+
+        .queue-header {
+            padding: 24px;
+            border-bottom: 1px solid #E9ECEF;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .queue-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .queue-subtitle {
+            font-size: 14px;
+            color: var(--medium-gray);
+        }
+
+       
+
+        .patient-card {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: 1px solid #E9ECEF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+        }
+
+        .patient-card.active {
+            border: 2px solid var(--primary-blue);
+            background: var(--primary-blue-light);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .patient-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .patient-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+        }
+
+        .patient-date {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--success-green);
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: calc(var(--sidebar-collapsed) + var(--patient-queue-width));
+            padding: 24px;
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.expanded ~ .main-content {
+            margin-left: calc(var(--sidebar-expanded) + var(--patient-queue-width));
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .page-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Page Headers */
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-left: 16px;
+        }
+
+        .page-header i {
+            font-size: 32px;
+            color: var(--primary-blue);
+        }
+
+        /* Patient Details Header */
+        .patient-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .patient-header-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 32px;
+            margin-right: 24px;
+        }
+
+        .patient-header-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .member-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr -9fr;
+            gap: 24px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .content-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: 60px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary-blue);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #000000;
+            margin-bottom: 4px;
+        }
+
+        .form-value {
+            font-size: 16px;
+            color: var(--dark-gray);
+            padding: 8px 0;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: var(--primary-blue); }
+        .stat-icon.green { background: var(--success-green); }
+        .stat-icon.orange { background: #FF9800; }
+        .stat-icon.purple { background: #9C27B0; }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--medium-gray);
+            font-weight: 500;
+        }
+
+        /* Calendar styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: repeat;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: repeat;
+            padding: 16px;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            background: #F8F9FA;
+            color: #CED4DA;
+        }
+
+        .calendar-day.today {
+            background: var(--primary-blue-light);
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .calendar-event {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: rgb(0, 0, 0,0);
+            color: var(--dark-gray);
+            border: 1px solid #8b8b8b;
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1199px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-field.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+            }
+            
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+            
+            .patient-queue {
+                left: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .patient-queue.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">MedDash</div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="sidebar-item">
+                <div class="sidebar-icon active" data-page="patients">
+                    <i class="fas fa-home"></i>
+                    <span class="sidebar-text">Home</span>
+                </div>
+                <div class="tooltip">Dashboard</div>
+            </div>
+           <!-- <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="sidebar-text">Calendar</span>
+                </div>
+                <div class="tooltip">Calendar</div>
+            </div>-->
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="sidebar-text">Reports</span>
+                </div>
+                <div class="tooltip">Reports</div>
+            </div>
+            
+        </div>
+        <div class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    </nav>
+
+   
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Main Section -->
+            <section id="patients" class="page-section active">
+            
+            <div class="patient-header">
+                <div class="patient-header-avatar">SJ</div>
+                <div class="patient-header-info">
+                    <h1>Sarah Johnson</h1>
+                    <span class="member-badge">Patient ID</span>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="content-column">
+                    <!-- Basic Information -->
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">Gender</div>
+                                <div class="form-value">Female</div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Date of Birth</div>
+                                <div class="form-value">March 15, 1985</div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Phone</div>
+                                <div class="form-value">(555) 123-4567</div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <div class="form-value">sarah.johnson@email.com</div>
+                            </div>
+                            <div class="form-field full-width">
+                                <div class="form-label">Address</div>
+                                <div class="form-value">123 Main Street, New York, NY 10001</div>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+            </div>
+        </section>
+
+       
+
+        <!-- Calendar Section -->
+        <section id="calendar" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h1>Appointment Calendar</h1>
+            </div>
+
+            <div class="info-card">
+                <div class="card-title">
+                    <i class="fas fa-calendar"></i>
+                    March 2024
+                </div>
+                <div class="calendar-grid">
+                    <div class="calendar-day">1</div>
+                    <div class="calendar-day">2</div>
+                    <div class="calendar-day">3</div>
+                    <div class="calendar-day">4</div>
+                    <div class="calendar-day">5</div>
+                    <div class="calendar-day">6</div>
+                    <div class="calendar-day">7</div>
+                    <div class="calendar-day">8
+                        <div class="calendar-event">10:00 AM - Sarah J.</div>
+                    </div>
+                    <div class="calendar-day today">9
+                        <div class="calendar-event">2:30 PM - Mike C.</div>
+                        <div class="calendar-event">4:00 PM - Emma D.</div>
+                    </div>
+                    <div class="calendar-day">10</div>
+                    <div class="calendar-day">11</div>
+                    <div class="calendar-day">12
+                        <div class="calendar-event">9:00 AM - James W.</div>
+                    </div>
+                    <div class="calendar-day">13</div>
+                    <div class="calendar-day">14</div>
+                    <div class="calendar-day">15</div>
+                    <div class="calendar-day">16</div>
+                    <div class="calendar-day">17</div>
+                    <div class="calendar-day">18</div>
+                    <div class="calendar-day">19</div>
+                    <div class="calendar-day">20</div>
+                    <div class="calendar-day">21</div>
+                    <div class="calendar-day">22</div>
+                    <div class="calendar-day">23</div>
+                    <div class="calendar-day">24</div>
+                    <div class="calendar-day">25</div>
+                    <div class="calendar-day">26</div>
+                    <div class="calendar-day">27</div>
+                    <div class="calendar-day">28</div>
+                    <div class="calendar-day">29</div>
+                    <div class="calendar-day">30</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Appointment Date
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="padding: 12px; border-left: 4px solid var(--primary-blue); background: repeat;">
+                                <div style="font-weight: 600;">2:30 PM - Sarah Johnson</div>
+                                <div style="color: var(--medium-gray); font-size: 14px;">Dental Cleaning</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-chart-bar"></i>
+                <h1>Reports</h1>
+            </div>
+
+           
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            Patient Report
+                        </div>
+                        <p>Breakdown of different treatment types and their frequency over the selected period.</p>
+                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Dental Cleaning</span>
+                                <span style="font-weight: 600;">45%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Root Canal</span>
+                                <span style="font-weight: 600;">25%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Filling</span>
+                                <span style="font-weight: 600;">20%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Other</span>
+                                <span style="font-weight: 600;">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-download"></i>
+                            Export Reports
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-pdf"></i>
+                                Report (PDF)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-excel"></i>
+                                Patient Data (Excel)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-csv"></i>
+                                Patient Data (CSV)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-cog"></i>
+                <h1>System Settings</h1>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user-cog"></i>
+                            Profile Settings
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">Full Name</div>
+                                <input type="text" value="Dr. Sarah Medical" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <input type="email" value="dr.sarah@clinic.com" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field full-width">
+                                <div class="form-label">Clinic Address</div>
+                                <input type="text" value="123 Medical Center, Health City" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button class="action-btn primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-bell"></i>
+                            Notification Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>Email notifications for new appointments</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>SMS reminders for patients</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" style="width: 18px; height: 18px;">
+                                <span>Weekly summary reports</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Security Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-mobile-alt"></i>
+                                Setup 2FA
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-history"></i>
+                                Login History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-palette"></i>
+                            Appearance
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="form-field">
+                                <div class="form-label">Theme</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>Light Mode</option>
+                                    <option>Dark Mode</option>
+                                    <option>Auto</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Language</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>English</option>
+                                    <option>Arabic</option>
+                                    <option>French</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Patient data
+        const patientData = {
+            'sarah-johnson': {
+                avatar: 'SJ',
+                name: 'Sarah Johnson',
+                badge: 'Premium Member',
+                info: {
+                    gender: 'Female',
+                    dob: 'March 15, 1985',
+                    phone: '(555) 123-4567',
+                    email: 'sarah.johnson@email.com',
+                    address: '123 Main Street, New York, NY 10001',
+                    emergency: 'John Johnson - (555) 987-6543'
+                },
+                insurance: {
+                    policy: 'HC-2024-789456',
+                    expires: 'December 31, 2024',
+                    provider: 'HealthCare Plus',
+                    status: 'Active Coverage'
+                }
+            },
+            'mike-chen': {
+                avatar: 'MC',
+                name: 'Mike Chen',
+                badge: 'Standard Member',
+                info: {
+                    gender: 'Male',
+                    dob: 'July 22, 1990',
+                    phone: '(555) 234-5678',
+                    email: 'mike.chen@email.com',
+                    address: '456 Oak Avenue, Los Angeles, CA 90210',
+                    emergency: 'Lisa Chen - (555) 876-5432'
+                },
+                insurance: {
+                    policy: 'HC-2024-234567',
+                    expires: 'June 30, 2024',
+                    provider: 'MediCare Pro',
+                    status: 'Active Coverage'
+                }
+            },
+            'emma-davis': {
+                avatar: 'ED',
+                name: 'Emma Davis',
+                badge: 'New Patient',
+                info: {
+                    gender: 'Female',
+                    dob: 'November 8, 1995',
+                    phone: '(555) 345-6789',
+                    email: 'emma.davis@email.com',
+                    address: '789 Pine Street, Chicago, IL 60601',
+                    emergency: 'Robert Davis - (555) 765-4321'
+                },
+                insurance: {
+                    policy: 'HC-2024-345678',
+                    expires: 'September 15, 2024',
+                    provider: 'HealthFirst',
+                    status: 'Pending Verification'
+                }
+            }
+        };
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const patientCards = document.querySelectorAll('.patient-card');
+        const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+        const pageSections = document.querySelectorAll('.page-section');
+
+        // Navigation functionality - This is the key linking mechanism
+        sidebarIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                const targetPage = icon.dataset.page;
+                
+                // Remove active class from all icons and sections
+                sidebarIcons.forEach(i => i.classList.remove('active'));
+                pageSections.forEach(section => section.classList.remove('active'));
+                
+                // Add active class to clicked icon and corresponding section
+                icon.classList.add('active');
+                const targetSection = document.getElementById(targetPage);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+                
+                // Add visual feedback
+                createRipple(icon);
+                
+                // Animate section transition
+                setTimeout(() => {
+                    targetSection.style.opacity = '0';
+                    targetSection.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        targetSection.style.transition = 'all 0.3s ease';
+                        targetSection.style.opacity = '1';
+                        targetSection.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 100);
+            });
+        });
+
+        // Sidebar functionality
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+            const icon = sidebarToggle.querySelector('i');
+            
+            if (sidebar.classList.contains('expanded')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+
+        // Patient selection functionality
+        patientCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Remove active class from all cards
+                patientCards.forEach(c => c.classList.remove('active'));
+                // Add active class to clicked card
+                card.classList.add('active');
+                
+                // Get patient data
+                const patientId = card.dataset.patient;
+                const patient = patientData[patientId];
+                
+                if (patient) {
+                    updatePatientDetails(patient);
+                }
+                
+                // Add selection animation
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Update patient details function
+        function updatePatientDetails(patient) {
+            // Update header (only in patients section)
+            const headerAvatar = document.querySelector('#patients .patient-header-avatar');
+            const headerName = document.querySelector('#patients .patient-header-info h1');
+            const memberBadge = document.querySelector('#patients .member-badge');
+            
+            if (headerAvatar) headerAvatar.textContent = patient.avatar;
+            if (headerName) headerName.textContent = patient.name;
+            if (memberBadge) memberBadge.textContent = patient.badge;
+            
+            // Update basic information
+            const formValues = document.querySelectorAll('#patients .form-value');
+            if (formValues.length >= 6) {
+                formValues[0].textContent = patient.info.gender;
+                formValues[1].textContent = patient.info.dob;
+                formValues[2].textContent = patient.info.phone;
+                formValues[3].textContent = patient.info.email;
+                formValues[4].textContent = patient.info.address;
+            }
+            
+            // Update insurance information
+            const policyDiv = document.querySelector('#patients [style*="font-weight: 600"]');
+            if (policyDiv) policyDiv.textContent = `Policy #: ${patient.insurance.policy}`;
+        }
+
+        // Ripple effect function
+        function createRipple(element) {
+            const ripple = document.createElement('span');
+            const rect = element.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                top: 50%;
+                left: 50%;
+                margin-top: ${-size / 2}px;
+                margin-left: ${-size / 2}px;
+                pointer-events: none;
+            `;
+            
+            element.style.position = 'relative';
+            element.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+
+        // Add ripple animation keyframes
+        const rippleStyle = document.createElement('style');
+        rippleStyle.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(rippleStyle);
+
+        // Button interactions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.action-btn')) {
+                const btn = e.target.closest('.action-btn');
+                createRipple(btn);
+                
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 150);
+            }
+        });
+
+        // Initialize page with animation
+        window.addEventListener('load', () => {
+            const activeSection = document.querySelector('.page-section.active');
+            if (activeSection) {
+                activeSection.style.opacity = '0';
+                activeSection.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    activeSection.style.transition = 'all 0.6s ease';
+                    activeSection.style.opacity = '1';
+                    activeSection.style.transform = 'translateY(0)';
+                }, 100);
+            }
+        });
+
+        // Mobile responsiveness
+        function handleResize() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('expanded');
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+    </script>
+</body>
+</html>

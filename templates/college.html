@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #FAFBFC;
+            overflow-x: hidden;
+        }
+
+        /* CSS Custom Properties */
+        :root {
+            --primary-blue: #2563eb;
+            --primary-blue-light: #dbeafe;
+            --primary-blue-dark: #1d4ed8;
+            --success-green: #10b981;
+            --danger-red: #ef4444;
+            --warning-yellow: #f59e0b;
+            --light-gray: #f8fafc;
+            --medium-gray: #64748b;
+            --dark-gray: #1e293b;
+            --sidebar-collapsed: 64px;
+            --sidebar-expanded: 256px;
+            --queue-width: 320px;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+         /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-collapsed);
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            z-index: 1000;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--light-gray);
+        }
+
+        .sidebar.expanded .sidebar-header {
+            justify-content: flex-start;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .logo {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar-nav {
+            padding: 20px 0;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+
+        .sidebar-item {
+            position: relative;
+            margin: 8px 15px;
+            cursor: pointer;
+        }
+
+        .sidebar-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 44px;
+            border-radius: 8px;
+            font-size: 18px;
+            color: var(--medium-gray);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            border: none;
+            background: none;
+            cursor: pointer;
+            text-align: left;
+            padding: 0 12px;
+        }
+
+        .sidebar-icon:hover {
+            transform: scale(1.05);
+            background-color: rgba(0, 123, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .sidebar-icon:focus {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+            background-color: rgba(0, 123, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .sidebar-icon.active {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transform: translateX(2px);
+        }
+
+        .sidebar-icon.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 0 2px 2px 0;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { height: 0; }
+            to { height: 100%; }
+        }
+
+        .sidebar-text {
+            margin-left: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-text {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar.expanded .sidebar-icon {
+            justify-content: flex-start;
+            padding-left: 12px;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: var(--dark-gray);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: var(--dark-gray);
+        }
+
+        .sidebar:not(.expanded) .sidebar-item:hover .tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 28px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #E9ECEF;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--medium-gray);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        /* Queue Panel */
+        .queue-panel {
+            position: fixed;
+            left: var(--sidebar-collapsed);
+            top: 0;
+            width: var(--queue-width);
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #e2e8f0;
+            border-left: 1px solid #e2e8f0;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            transform: translateX(-100%);
+            opacity: 0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .sidebar.expanded ~ .queue-panel {
+            left: var(--sidebar-expanded);
+        }
+        
+        .queue-panel.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+       
+        .queue-header {
+            padding: 20px;
+            border-bottom: 1px solid #e2e8f0;
+            background: var(--light-gray);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .queue-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .queue-subtitle {
+            font-size: 14px;
+            color: var(--medium-gray);
+        }
+
+        .queue-list {
+            padding: 16px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .queue-card {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: 1px solid #E9ECEF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .queue-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+        }
+
+        .queue-card.active {
+            border: 2px solid var(--primary-blue);
+            background: var(--primary-blue-light);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .queue-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .queue-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .queue-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+        }
+
+        .queue-detail {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--success-green);
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-badge.warning {
+            background: var(--warning-yellow);
+            color: var(--dark-gray);
+        }
+
+        .status-badge.danger {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: calc(var(--sidebar-collapsed));
+            padding: 24px;
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.expanded ~ .main-content {
+            margin-left: calc(var(--sidebar-expanded));
+        }
+
+        /* Main content adjustments when queue is shown */
+        .main-content.with-queue {
+            margin-left: calc(var(--sidebar-collapsed) + var(--queue-width));
+        }
+
+        .sidebar.expanded ~ .main-content.with-queue {
+            margin-left: calc(var(--sidebar-expanded) + var(--queue-width));
+        }
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .page-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Page Headers */
+        .page-header {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-left: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .page-header i {
+            font-size: 24px;
+            color: var(--primary-blue);
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            gap: 24px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .content-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-blue-light);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary-blue);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .form-value {
+            font-size: 16px;
+            color: var(--dark-gray);
+            padding: 8px 0;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: var(--primary-blue); }
+        .stat-icon.green { background: var(--success-green); }
+        .stat-icon.orange { background: #FF9800; }
+        .stat-icon.purple { background: #9C27B0; }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--medium-gray);
+            font-weight: 500;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+            background: white;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-blue-dark);
+            border-color: var(--primary-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--dark-gray);
+            border-color: #d1d5db;
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--light-gray);
+            border-color: var(--medium-gray);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Add Button */
+        .add-btn {
+            background: linear-gradient(135deg, var(--success-green), #20c997);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .add-btn:hover {
+            background: linear-gradient(135deg, #20c997, var(--success-green));
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--light-gray);
+            padding: 16px 20px;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            border-bottom: 1px solid #e2e8f0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #eff6ff;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tr:nth-child(even):hover {
+            background: #eff6ff;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid #e2e8f0;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .form-input:invalid, .form-select:invalid, .form-textarea:invalid {
+            border-color: var(--danger-red);
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+        }
+
+        .action-btn:focus {
+            outline: 2px solid var(--primary-blue);
+            outline-offset: 2px;
+        }
+
+        .add-btn:focus {
+            outline: 2px solid var(--success-green);
+            outline-offset: 2px;
+        }
+
+        .save-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: #2563eb;
+            color: white;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: #1d4ed8;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn.view {
+            color: #2563eb;
+            background: #eff6ff;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.view:hover {
+            background: #dbeafe;
+        }
+
+        .action-btn.edit {
+            color: #10b981;
+            background: #ecfdf5;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.edit:hover {
+            background: #d1fae5;
+        }
+
+        .action-btn.delete {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.delete:hover {
+            background: #fee2e2;
+        }
+
+        /* Error and success styles */
+        .error-message {
+            color: var(--danger-red);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .field-error {
+            border-color: var(--danger-red) !important;
+        }
+
+        /* Loading state */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification improvements */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10001;
+            max-width: 400px;
+            word-wrap: break-word;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notification.success {
+            background: var(--success-green);
+            color: white;
+        }
+
+        .notification.error {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .notification.warning {
+            background: var(--warning-yellow);
+            color: var(--dark-gray);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1199px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-field.full-width {
+                grid-column: span 1;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+                z-index: 1002;
+            }
+            
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+            
+            .queue-panel {
+                left: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1001;
+            }
+            
+            .queue-panel.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+                padding: 20px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+
+            .search-input {
+                min-width: unset;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .modal-content {
+                width: 95%;
+                margin: 20px;
+                max-height: 90vh;
+            }
+            
+            .action-buttons {
+                flex-wrap: wrap;
+                gap: 0.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 24px;
+            }
+            
+            .stat-number {
+                font-size: 28px;
+            }
+            
+            .queue-card {
+                padding: 12px;
+            }
+            
+            .queue-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+        <div class="sidebar-header">
+            <div class="logo" role="banner">MedDash</div>
+        </div>
+        <div class="sidebar-nav" role="menubar">
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon active" data-page="dashboard" role="menuitem" aria-label="Dashboard" aria-current="page">
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </button>
+                <div class="tooltip" role="tooltip">Dashboard</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="doctors" role="menuitem" aria-label="Doctors Management">
+                    <i class="fas fa-user-md" aria-hidden="true"></i>
+                    <span class="sidebar-text">Doctors</span>
+                </button>
+                <div class="tooltip" role="tooltip">Doctors</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="students" role="menuitem" aria-label="Students Management">
+                    <i class="fas fa-user-graduate" aria-hidden="true"></i>
+                    <span class="sidebar-text">Students</span>
+                </button>
+                <div class="tooltip" role="tooltip">Students</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="departments" role="menuitem" aria-label="Departments Management">
+                    <i class="fas fa-building" aria-hidden="true"></i>
+                    <span class="sidebar-text">Departments</span>
+                </button>
+                <div class="tooltip" role="tooltip">Departments</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="rounds" role="menuitem" aria-label="Rounds Management">
+                    <i class="fas fa-hospital" aria-hidden="true"></i>
+                    <span class="sidebar-text">Rounds</span>
+                </button>
+                <div class="tooltip" role="tooltip">Rounds</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="reports" role="menuitem" aria-label="Reports and Analytics">
+                    <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                    <span class="sidebar-text">Reports</span>
+                </button>
+                <div class="tooltip" role="tooltip">Reports</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="patients" role="menuitem" aria-label="Patients Management">
+                    <i class="fas fa-user-injured" aria-hidden="true"></i>
+                    <span class="sidebar-text">Patients</span>
+                </button>
+                <div class="tooltip" role="tooltip">Patients</div>
+            </div>
+            <div class="sidebar-item" role="none">
+                <button class="sidebar-icon" data-page="settings" role="menuitem" aria-label="System Settings">
+                    <i class="fas fa-cog" aria-hidden="true"></i>
+                    <span class="sidebar-text">Settings</span>
+                </button>
+                <div class="tooltip" role="tooltip">Settings</div>
+            </div>
+        </div>
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar" aria-expanded="false">
+            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+    </nav>
+
+    <!-- Queue Panels -->
+    <aside class="queue-panel" id="doctorsQueue" role="complementary" aria-label="Doctors list">
+        <div class="queue-header">
+            <h2 class="queue-title">Doctors</h2>
+            <div class="queue-subtitle" id="doctorsCount" aria-live="polite">0 doctors</div>
+        </div>
+        <div class="queue-list" id="doctorsList" role="list" aria-label="List of doctors"></div>
+    </aside>
+
+    <aside class="queue-panel" id="studentsQueue" role="complementary" aria-label="Students list">
+        <div class="queue-header">
+            <h2 class="queue-title">Students</h2>
+            <div class="queue-subtitle" id="studentsCount" aria-live="polite">0 students</div>
+        </div>
+        <div class="queue-list" id="studentsList" role="list" aria-label="List of students"></div>
+    </aside>
+
+    <aside class="queue-panel" id="departmentsQueue" role="complementary" aria-label="Departments list">
+        <div class="queue-header">
+            <h2 class="queue-title">Departments</h2>
+            <div class="queue-subtitle" id="departmentsCount" aria-live="polite">0 departments</div>
+        </div>
+        <div class="queue-list" id="departmentsList" role="list" aria-label="List of departments"></div>
+    </aside>
+
+    <aside class="queue-panel" id="roundsQueue" role="complementary" aria-label="Rounds list">
+        <div class="queue-header">
+            <h2 class="queue-title">Rounds</h2>
+            <div class="queue-subtitle" id="roundsCount" aria-live="polite">0 rounds</div>
+        </div>
+        <div class="queue-list" id="roundsList" role="list" aria-label="List of rounds"></div>
+    </aside>
+
+    <aside class="queue-panel" id="patientsQueue" role="complementary" aria-label="Patients list">
+        <div class="queue-header">
+            <h2 class="queue-title">Patients</h2>
+            <div class="queue-subtitle" id="patientsCount" aria-live="polite">0 patients</div>
+        </div>
+        <div class="queue-list" id="patientsList" role="list" aria-label="List of patients"></div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent" role="main">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="page-section active" aria-labelledby="dashboard-title">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <h1 id="dashboard-title">Dashboard</h1>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <div class="stat-number" id="totalDoctors">0</div>
+                    <div class="stat-label">Total Doctors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <div class="stat-number" id="totalStudents">0</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="stat-number" id="totalDepartments">0</div>
+                    <div class="stat-label">Departments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-hospital"></i>
+                    </div>
+                    <div class="stat-number" id="activeRounds">0</div>
+                    <div class="stat-label">Active Rounds</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Doctors Section -->
+        <section id="doctors" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-user-md"></i>
+                    <h1>Doctors Management</h1>
+                </div>
+                <button class="add-btn" onclick="openAddModal('doctor')">
+                    <i class="fas fa-plus"></i>
+                    Add Doctor
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="filters">
+                    <input type="text" class="search-input" id="doctorsSearch" placeholder="Search doctors...">
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Specialization</th>
+                                <th>Department</th>
+                                <th>Phone</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Students Section -->
+        <section id="students" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-user-graduate"></i>
+                    <h1>Students Management</h1>
+                </div>
+                <button class="add-btn" onclick="openAddModal('student')">
+                    <i class="fas fa-plus"></i>
+                    Add Student
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="filters">
+                    <input type="text" class="search-input" id="studentsSearch" placeholder="Search students...">
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Year</th>
+                                <th>Department</th>
+                                <th>Cases</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Departments Section -->
+        <section id="departments" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-building"></i>
+                    <h1>Departments Management</h1>
+                </div>
+                <button class="add-btn" onclick="openAddModal('department')">
+                    <i class="fas fa-plus"></i>
+                    Add Department
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="filters">
+                    <input type="text" class="search-input" id="departmentsSearch" placeholder="Search departments...">
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Head</th>
+                                <th>Doctors</th>
+                                <th>Students</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rounds Section -->
+        <section id="rounds" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-hospital"></i>
+                    <h1>Rounds Management</h1>
+                </div>
+                <button class="add-btn" onclick="openAddModal('round')">
+                    <i class="fas fa-plus"></i>
+                    Add Round
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="filters">
+                    <input type="text" class="search-input" id="roundsSearch" placeholder="Search rounds...">
+                    <select id="roundStatusFilter" class="form-select" style="width: auto;">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="scheduled">Scheduled</option>
+                    </select>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Doctor</th>
+                                <th>Students</th>
+                                <th>Date/Time</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="roundsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-chart-bar"></i>
+                    <h1>Reports & Analytics</h1>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number">89%</div>
+                    <div class="stat-label">Attendance Rate</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">+15%</div>
+                    <div class="stat-label">Monthly Growth</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-procedures"></i>
+                    </div>
+                    <div class="stat-number">342</div>
+                    <div class="stat-label">Cases Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-number">4.8</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Patients Section -->
+        <section id="patients" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-user-injured" aria-hidden="true"></i>
+                    <h1 id="patients-title">Patients Management</h1>
+                </div>
+                <button class="add-btn" onclick="openAddModal('patient')">
+                    <i class="fas fa-plus"></i>
+                    Add Patient
+                </button>
+            </div>
+
+            <div class="table-container">
+                <div class="filters">
+                    <input type="text" class="search-input" id="patientsSearch" placeholder="Search patients...">
+                    <select id="patientStatusFilter" class="form-select" style="width: auto;">
+                        <option value="">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Discharged">Discharged</option>
+                        <option value="In Treatment">In Treatment</option>
+                        <option value="Emergency">Emergency</option>
+                    </select>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Age</th>
+                                <th>Gender</th>
+                                <th>Phone</th>
+                                <th>Condition</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="patientsTable">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="page-section">
+            <div class="page-header">
+                <div class="page-header-left">
+                    <i class="fas fa-cog"></i>
+                    <h1>System Settings</h1>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user-cog"></i>
+                            Profile Settings
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">Full Name</div>
+                                <input type="text" class="form-input" value="Dr. Sarah Medical">
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <input type="email" class="form-input" value="dr.sarah@clinic.com">
+                            </div>
+                            <div class="form-field full-width">
+                                <div class="form-label">Institution Address</div>
+                                <input type="text" class="form-input" value="123 Medical Center, Health City">
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button class="action-btn primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Add/Edit Modal -->
+    <div id="addEditModal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-modal="true" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add Item</h3>
+                <button class="close-btn" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            </div>
+            
+            <form id="addEditForm" novalidate>
+                <div id="modalFields" role="group" aria-labelledby="modalTitle">
+                    <!-- Dynamic fields will be inserted here -->
+                </div>
+                
+                <button type="submit" class="save-btn" aria-describedby="saveButtonText">
+                    <i class="fas fa-save" aria-hidden="true"></i>
+                    <span id="saveButtonText">Save</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage
+        let doctors = [
+            { id: 'D001', name: 'Dr. Ahmed Hassan', specialization: 'Cardiology', department: 'Internal Medicine', phone: '+20123456789', status: 'Active', email: 'ahmed.hassan@hospital.com' },
+            { id: 'D002', name: 'Dr. Sarah Smith', specialization: 'Pediatrics', department: 'Pediatrics', phone: '+20123456790', status: 'Active', email: 'sarah.smith@hospital.com' },
+            { id: 'D003', name: 'Dr. Mohammed Ali', specialization: 'Surgery', department: 'Surgery', phone: '+20123456791', status: 'On Leave', email: 'mohammed.ali@hospital.com' }
+        ];
+
+        let students = [
+            { id: 'S001', name: 'John Doe', year: '5th Year', department: 'Medicine', cases: 12, status: 'Active', email: 'john.doe@student.com', phone: '+20123456792' },
+            { id: 'S002', name: 'Jane Smith', year: '4th Year', department: 'Surgery', cases: 8, status: 'Active', email: 'jane.smith@student.com', phone: '+20123456793' },
+            { id: 'S003', name: 'Ahmad Mahmoud', year: '6th Year', department: 'Pediatrics', cases: 15, status: 'On Rotation', email: 'ahmad.mahmoud@student.com', phone: '+20123456794' }
+        ];
+
+        let departments = [
+            { id: 'DEP001', name: 'Internal Medicine', head: 'Dr. Ahmed Hassan', doctors: 8, students: 25, status: 'Active', description: 'Internal medicine department' },
+            { id: 'DEP002', name: 'Surgery', head: 'Dr. Mohammed Ali', doctors: 6, students: 20, status: 'Active', description: 'Surgery department' },
+            { id: 'DEP003', name: 'Pediatrics', head: 'Dr. Sarah Smith', doctors: 5, students: 18, status: 'Active', description: 'Pediatrics department' }
+        ];
+
+        let rounds = [
+            { id: 'R001', name: 'Morning Ward Round', department: 'Internal Medicine', doctor: 'Dr. Ahmed Hassan', students: 8, datetime: '2024-01-15T08:00', status: 'Active' },
+            { id: 'R002', name: 'Surgery Review', department: 'Surgery', doctor: 'Dr. Mohammed Ali', students: 6, datetime: '2024-01-15T14:00', status: 'Scheduled' },
+            { id: 'R003', name: 'Pediatric Cases', department: 'Pediatrics', doctor: 'Dr. Sarah Smith', students: 5, datetime: '2024-01-14T10:00', status: 'Completed' }
+        ];
+
+        let patients = [
+            { id: 'P001', name: 'Ahmed Mohamed', age: 35, gender: 'Male', phone: '+20123456795', condition: 'Dental Caries', status: 'In Treatment', email: 'ahmed.mohamed@email.com', address: 'Cairo, Egypt' },
+            { id: 'P002', name: 'Fatma Hassan', age: 28, gender: 'Female', phone: '+20123456796', condition: 'Orthodontic Treatment', status: 'Active', email: 'fatma.hassan@email.com', address: 'Alexandria, Egypt' },
+            { id: 'P003', name: 'Omar Ali', age: 45, gender: 'Male', phone: '+20123456797', condition: 'Periodontal Disease', status: 'Emergency', email: 'omar.ali@email.com', address: 'Giza, Egypt' },
+            { id: 'P004', name: 'Nour Ibrahim', age: 22, gender: 'Female', phone: '+20123456798', condition: 'Wisdom Tooth Extraction', status: 'Discharged', email: 'nour.ibrahim@email.com', address: 'Sharm El Sheikh, Egypt' }
+        ];
+
+        let currentEditingItem = null;
+        let currentEditingType = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            setupEventListeners();
+            populateAllTables();
+            renderQueues();
+            updateDashboardStats();
+        }
+
+        function setupEventListeners() {
+            try {
+                // Sidebar navigation with event delegation
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.addEventListener('click', (e) => {
+                        const icon = e.target.closest('.sidebar-icon');
+                        if (icon) {
+                            handleNavigation(icon);
+                        }
+                    });
+                }
+
+                // Sidebar toggle
+                const sidebarToggle = document.getElementById('sidebarToggle');
+                if (sidebarToggle) {
+                    sidebarToggle.addEventListener('click', toggleSidebar);
+                }
+
+                // Search inputs with debouncing
+                const searchTimeouts = {};
+                
+                ['doctors', 'students', 'departments', 'rounds', 'patients'].forEach(type => {
+                    const searchInput = document.getElementById(type + 'Search');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', () => {
+                            clearTimeout(searchTimeouts[type]);
+                            searchTimeouts[type] = setTimeout(() => {
+                                try {
+                                    filterTable(type);
+                                } catch (error) {
+                                    console.error(`Error filtering ${type}:`, error);
+                                    showNotification('Error filtering data', 'error');
+                                }
+                            }, 300);
+                        });
+                    }
+                });
+
+                // Status filter for rounds
+                const roundStatusFilter = document.getElementById('roundStatusFilter');
+                if (roundStatusFilter) {
+                    roundStatusFilter.addEventListener('change', () => {
+                        try {
+                            filterTable('rounds');
+                        } catch (error) {
+                            console.error('Error filtering rounds:', error);
+                            showNotification('Error filtering rounds', 'error');
+                        }
+                    });
+                }
+
+                // Status filter for patients
+                const patientStatusFilter = document.getElementById('patientStatusFilter');
+                if (patientStatusFilter) {
+                    patientStatusFilter.addEventListener('change', () => {
+                        try {
+                            filterTable('patients');
+                        } catch (error) {
+                            console.error('Error filtering patients:', error);
+                            showNotification('Error filtering patients', 'error');
+                        }
+                    });
+                }
+
+                // Form submission
+                const addEditForm = document.getElementById('addEditForm');
+                if (addEditForm) {
+                    addEditForm.addEventListener('submit', handleFormSubmit);
+                }
+
+                // Modal close on background click
+                const addEditModal = document.getElementById('addEditModal');
+                if (addEditModal) {
+                    addEditModal.addEventListener('click', function(e) {
+                        if (e.target === this) closeModal();
+                    });
+                }
+
+                // Escape key to close modal
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && document.getElementById('addEditModal').classList.contains('active')) {
+                        closeModal();
+                    }
+                });
+
+                // Keyboard navigation for sidebar
+                document.addEventListener('keydown', function(e) {
+                    if (e.altKey && e.key >= '1' && e.key <= '7') {
+                        const pageIndex = parseInt(e.key) - 1;
+                        const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+                        if (sidebarIcons[pageIndex]) {
+                            sidebarIcons[pageIndex].click();
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error setting up event listeners:', error);
+                showNotification('Error initializing application', 'error');
+            }
+        }
+
+        function handleNavigation(icon) {
+            try {
+                const targetPage = icon.dataset.page;
+                if (!targetPage) return;
+                
+                // Update active states
+                document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+                
+                icon.classList.add('active');
+                icon.setAttribute('aria-current', 'page');
+                
+                const targetSection = document.getElementById(targetPage);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+                
+                // Show/hide queues and adjust main content
+                hideAllQueues();
+                const mainContent = document.getElementById('mainContent');
+                if (mainContent) {
+                    mainContent.classList.remove('with-queue');
+                }
+                
+                if (['doctors', 'students', 'departments', 'rounds', 'patients'].includes(targetPage)) {
+                    const queueId = targetPage + 'Queue';
+                    const queue = document.getElementById(queueId);
+                    if (queue) {
+                        queue.classList.add('show');
+                        if (mainContent) {
+                            mainContent.classList.add('with-queue');
+                        }
+                        // Update queue position based on sidebar state
+                        const sidebar = document.getElementById('sidebar');
+                        const isExpanded = sidebar.classList.contains('expanded');
+                        updateQueuePositions(isExpanded);
+                    }
+                }
+                
+                // Update page title for screen readers
+                const pageTitle = targetPage.charAt(0).toUpperCase() + targetPage.slice(1);
+                document.title = `${pageTitle} - Medical Dashboard`;
+                
+            } catch (error) {
+                console.error('Error in navigation:', error);
+                showNotification('Error navigating to page', 'error');
+            }
+        }
+
+        function hideAllQueues() {
+            document.querySelectorAll('.queue-panel').forEach(queue => {
+                queue.classList.remove('show');
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const icon = toggle.querySelector('i');
+            
+            sidebar.classList.toggle('expanded');
+            const isExpanded = sidebar.classList.contains('expanded');
+            
+            // Update ARIA attributes
+            toggle.setAttribute('aria-expanded', isExpanded);
+            
+            // Update queue panel positions
+            updateQueuePositions(isExpanded);
+            
+            if (isExpanded) {
+                icon.style.transform = 'rotate(180deg)';
+                icon.setAttribute('aria-label', 'Collapse sidebar');
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+                icon.setAttribute('aria-label', 'Expand sidebar');
+            }
+        }
+
+        function updateQueuePositions(isExpanded) {
+            const queuePanels = document.querySelectorAll('.queue-panel');
+            const sidebarWidth = isExpanded ? 'var(--sidebar-expanded)' : 'var(--sidebar-collapsed)';
+            
+            queuePanels.forEach(panel => {
+                if (panel.classList.contains('show')) {
+                    panel.style.left = sidebarWidth;
+                }
+            });
+        }
+
+        function updateDashboardStats() {
+            document.getElementById('totalDoctors').textContent = doctors.length;
+            document.getElementById('totalStudents').textContent = students.length;
+            document.getElementById('totalDepartments').textContent = departments.length;
+            document.getElementById('activeRounds').textContent = rounds.filter(r => r.status === 'Active').length;
+        }
+
+        function renderQueues() {
+            renderQueue('doctors', doctors);
+            renderQueue('students', students);
+            renderQueue('departments', departments);
+            renderQueue('rounds', rounds);
+            renderQueue('patients', patients);
+        }
+
+        function renderQueue(type, data) {
+            const listElement = document.getElementById(type + 'List');
+            const countElement = document.getElementById(type + 'Count');
+            
+            if (!listElement || !countElement) return;
+            
+            listElement.innerHTML = '';
+            
+            data.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'queue-card';
+                if (index === 0) card.classList.add('active');
+                
+                const initials = getInitials(item.name);
+                let detail = '';
+                
+                switch(type) {
+                    case 'doctors':
+                        detail = item.specialization;
+                        break;
+                    case 'students':
+                        detail = item.year;
+                        break;
+                    case 'departments':
+                        detail = `${item.doctors} doctors`;
+                        break;
+                    case 'rounds':
+                        detail = new Date(item.datetime).toLocaleDateString();
+                        break;
+                    case 'patients':
+                        detail = `${item.age} years old`;
+                        break;
+                }
+                
+                const statusClass = getStatusClass(item.status);
+                
+                card.innerHTML = `
+                    <div class="queue-avatar">${initials}</div>
+                    <div class="queue-info">
+                        <div class="queue-name">${item.name}</div>
+                        <div class="queue-detail">${detail}</div>
+                        <span class="status-badge ${statusClass}">${item.status}</span>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => selectQueueItem(card, item, type));
+                listElement.appendChild(card);
+            });
+            
+            countElement.textContent = `${data.length} ${type}`;
+        }
+
+        function getStatusClass(status) {
+            switch(status.toLowerCase()) {
+                case 'on leave':
+                case 'on rotation':
+                case 'scheduled':
+                    return 'warning';
+                case 'inactive':
+                case 'cancelled':
+                    return 'danger';
+                default:
+                    return '';
+            }
+        }
+
+        function selectQueueItem(card, item, type) {
+            // Update active state
+            document.querySelectorAll(`#${type}List .queue-card`).forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            console.log('Selected:', item);
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function populateAllTables() {
+            populateTable('doctors', doctors);
+            populateTable('students', students);
+            populateTable('departments', departments);
+            populateTable('rounds', rounds);
+            populateTable('patients', patients);
+        }
+
+        function populateTable(type, data) {
+            const tableBody = document.getElementById(type + 'Table');
+            if (!tableBody) return;
+            
+            tableBody.innerHTML = '';
+            
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = generateTableRow(type, item);
+                tableBody.appendChild(row);
+            });
+        }
+
+        function generateTableRow(type, item) {
+            const actions = `
+                <div class="action-buttons">
+                    <button class="action-btn view" title="View Details" onclick="viewItem('${type}', '${item.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit" title="Edit" onclick="editItem('${type}', '${item.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete" title="Delete" onclick="deleteItem('${type}', '${item.id}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            const statusClass = getStatusClass(item.status);
+            
+            switch(type) {
+                case 'doctors':
+                    return `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.specialization}</td>
+                        <td>${item.department}</td>
+                        <td>${item.phone}</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                        <td>${actions}</td>
+                    `;
+                case 'students':
+                    return `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.year}</td>
+                        <td>${item.department}</td>
+                        <td>${item.cases}</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                        <td>${actions}</td>
+                    `;
+                case 'departments':
+                    return `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.head}</td>
+                        <td>${item.doctors}</td>
+                        <td>${item.students}</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                        <td>${actions}</td>
+                    `;
+                case 'rounds':
+                    const datetime = new Date(item.datetime);
+                    return `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.department}</td>
+                        <td>${item.doctor}</td>
+                        <td>${item.students}</td>
+                        <td>${datetime.toLocaleString()}</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                        <td>${actions}</td>
+                    `;
+                case 'patients':
+                    return `
+                        <td>${item.id}</td>
+                        <td>${item.name}</td>
+                        <td>${item.age}</td>
+                        <td>${item.gender}</td>
+                        <td>${item.phone}</td>
+                        <td>${item.condition}</td>
+                        <td><span class="status-badge ${statusClass}">${item.status}</span></td>
+                        <td>${actions}</td>
+                    `;
+            }
+        }
+
+        function filterTable(type) {
+            const searchInput = document.getElementById(type + 'Search');
+            if (!searchInput) return;
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            let filteredData;
+            
+            switch(type) {
+                case 'doctors':
+                    filteredData = doctors.filter(item => 
+                        item.name.toLowerCase().includes(searchTerm) ||
+                        item.specialization.toLowerCase().includes(searchTerm) ||
+                        item.department.toLowerCase().includes(searchTerm) ||
+                        item.phone.includes(searchTerm)
+                    );
+                    break;
+                case 'students':
+                    filteredData = students.filter(item =>
+                        item.name.toLowerCase().includes(searchTerm) ||
+                        item.year.toLowerCase().includes(searchTerm) ||
+                        item.department.toLowerCase().includes(searchTerm) ||
+                        item.phone.includes(searchTerm)
+                    );
+                    break;
+                case 'departments':
+                    filteredData = departments.filter(item =>
+                        item.name.toLowerCase().includes(searchTerm) ||
+                        item.head.toLowerCase().includes(searchTerm)
+                    );
+                    break;
+                case 'rounds':
+                    const statusFilter = document.getElementById('roundStatusFilter')?.value;
+                    filteredData = rounds.filter(item => {
+                        const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                                            item.department.toLowerCase().includes(searchTerm) ||
+                                            item.doctor.toLowerCase().includes(searchTerm);
+                        const matchesStatus = !statusFilter || item.status.toLowerCase() === statusFilter;
+                        return matchesSearch && matchesStatus;
+                    });
+                    break;
+                case 'patients':
+                    const patientStatusFilter = document.getElementById('patientStatusFilter')?.value;
+                    filteredData = patients.filter(item => {
+                        const matchesSearch = item.name.toLowerCase().includes(searchTerm) ||
+                                            item.condition.toLowerCase().includes(searchTerm) ||
+                                            item.phone.includes(searchTerm) ||
+                                            item.gender.toLowerCase().includes(searchTerm);
+                        const matchesStatus = !patientStatusFilter || item.status.toLowerCase() === patientStatusFilter.toLowerCase();
+                        return matchesSearch && matchesStatus;
+                    });
+                    break;
+            }
+            
+            populateTable(type, filteredData);
+        }
+
+        function openAddModal(type) {
+            currentEditingItem = null;
+            currentEditingType = type;
+            
+            const modal = document.getElementById('addEditModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const saveButtonText = document.getElementById('saveButtonText');
+            
+            modalTitle.textContent = `Add ${type.charAt(0).toUpperCase() + type.slice(0, -1)}`;
+            saveButtonText.textContent = 'Add';
+            
+            generateModalFields(type);
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            const firstInput = modal.querySelector('input, select, textarea');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+        }
+
+        function editItem(type, id) {
+            let data;
+            switch(type) {
+                case 'doctors': data = doctors; break;
+                case 'students': data = students; break;
+                case 'departments': data = departments; break;
+                case 'rounds': data = rounds; break;
+                case 'patients': data = patients; break;
+                default: return;
+            }
+            
+            const item = data.find(item => item.id === id);
+            if (!item) {
+                showNotification('Item not found', 'error');
+                return;
+            }
+            
+            currentEditingItem = item;
+            currentEditingType = type;
+            
+            const modal = document.getElementById('addEditModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const saveButtonText = document.getElementById('saveButtonText');
+            
+            modalTitle.textContent = `Edit ${type.charAt(0).toUpperCase() + type.slice(0, -1)}`;
+            saveButtonText.textContent = 'Update';
+            
+            generateModalFields(type, item);
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            const firstInput = modal.querySelector('input, select, textarea');
+            if (firstInput) {
+                setTimeout(() => firstInput.focus(), 100);
+            }
+        }
+
+        function viewItem(type, id) {
+            let data;
+            switch(type) {
+                case 'doctors': data = doctors; break;
+                case 'students': data = students; break;
+                case 'departments': data = departments; break;
+                case 'rounds': data = rounds; break;
+                case 'patients': data = patients; break;
+                default: return;
+            }
+            
+            const item = data.find(item => item.id === id);
+            if (!item) return;
+            
+            // Create a nicely formatted view
+            let details = Object.entries(item)
+                .map(([key, value]) => `${key.charAt(0).toUpperCase() + key.slice(1)}: ${value}`)
+                .join('\n');
+            
+            alert(`${type.charAt(0).toUpperCase() + type.slice(0, -1)} Details:\n\n${details}`);
+        }
+
+        function deleteItem(type, id) {
+            if (!confirm(`Are you sure you want to delete this ${type.slice(0, -1)}?`)) return;
+            
+            try {
+                switch(type) {
+                    case 'doctors':
+                        doctors = doctors.filter(item => item.id !== id);
+                        break;
+                    case 'students':
+                        students = students.filter(item => item.id !== id);
+                        break;
+                    case 'departments':
+                        departments = departments.filter(item => item.id !== id);
+                        break;
+                    case 'rounds':
+                        rounds = rounds.filter(item => item.id !== id);
+                        break;
+                    case 'patients':
+                        patients = patients.filter(item => item.id !== id);
+                        break;
+                }
+                
+                populateAllTables();
+                renderQueues();
+                updateDashboardStats();
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(0, -1)} deleted successfully!`, 'success');
+            } catch (error) {
+                showNotification('Error deleting item. Please try again.', 'error');
+                console.error('Delete error:', error);
+            }
+        }
+
+        function generateModalFields(type, item = null) {
+            const fieldsContainer = document.getElementById('modalFields');
+            fieldsContainer.innerHTML = '';
+            
+            const fields = getFieldsForType(type);
+            
+            fields.forEach(field => {
+                const formGroup = document.createElement('div');
+                formGroup.className = 'form-group';
+                
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.textContent = field.label;
+                if (field.required) label.textContent += ' *';
+                
+                let input;
+                if (field.type === 'select') {
+                    input = document.createElement('select');
+                    input.className = 'form-select';
+                    
+                    // Add placeholder option for required selects
+                    if (field.required) {
+                        const placeholderOption = document.createElement('option');
+                        placeholderOption.value = '';
+                        placeholderOption.textContent = `Select ${field.label}`;
+                        placeholderOption.disabled = true;
+                        input.appendChild(placeholderOption);
+                    }
+                    
+                    field.options.forEach(option => {
+                        const optionElement = document.createElement('option');
+                        optionElement.value = option.value;
+                        optionElement.textContent = option.label;
+                        input.appendChild(optionElement);
+                    });
+                } else if (field.type === 'textarea') {
+                    input = document.createElement('textarea');
+                    input.className = 'form-textarea';
+                } else {
+                    input = document.createElement('input');
+                    input.type = field.type || 'text';
+                    input.className = 'form-input';
+                }
+                
+                input.name = field.name;
+                input.required = field.required || false;
+                
+                if (item && item[field.name] !== undefined) {
+                    input.value = item[field.name];
+                }
+                
+                formGroup.appendChild(label);
+                formGroup.appendChild(input);
+                fieldsContainer.appendChild(formGroup);
+            });
+        }
+
+        function getFieldsForType(type) {
+            switch(type) {
+                case 'doctor':
+                    return [
+                        { name: 'name', label: 'Full Name', type: 'text', required: true },
+                        { name: 'specialization', label: 'Specialization', type: 'text', required: true },
+                        { name: 'department', label: 'Department', type: 'select', required: true, 
+                          options: departments.map(d => ({ value: d.name, label: d.name })) },
+                        { name: 'phone', label: 'Phone', type: 'tel', required: true },
+                        { name: 'email', label: 'Email', type: 'email', required: true },
+                        { name: 'status', label: 'Status', type: 'select', required: true,
+                          options: [
+                              { value: 'Active', label: 'Active' },
+                              { value: 'On Leave', label: 'On Leave' },
+                              { value: 'Inactive', label: 'Inactive' }
+                          ]
+                        }
+                    ];
+                case 'student':
+                    return [
+                        { name: 'name', label: 'Full Name', type: 'text', required: true },
+                        { name: 'year', label: 'Academic Year', type: 'select', required: true,
+                          options: [
+                              { value: '1st Year', label: '1st Year' },
+                              { value: '2nd Year', label: '2nd Year' },
+                              { value: '3rd Year', label: '3rd Year' },
+                              { value: '4th Year', label: '4th Year' },
+                              { value: '5th Year', label: '5th Year' },
+                              { value: '6th Year', label: '6th Year' }
+                          ]
+                        },
+                        { name: 'department', label: 'Department', type: 'select', required: true,
+                          options: departments.map(d => ({ value: d.name, label: d.name })) },
+                        { name: 'phone', label: 'Phone', type: 'tel', required: true },
+                        { name: 'email', label: 'Email', type: 'email', required: true },
+                        { name: 'cases', label: 'Number of Cases', type: 'number', required: true },
+                        { name: 'status', label: 'Status', type: 'select', required: true,
+                          options: [
+                              { value: 'Active', label: 'Active' },
+                              { value: 'On Rotation', label: 'On Rotation' },
+                              { value: 'Inactive', label: 'Inactive' }
+                          ]
+                        }
+                    ];
+                case 'department':
+                    return [
+                        { name: 'name', label: 'Department Name', type: 'text', required: true },
+                        { name: 'head', label: 'Department Head', type: 'select', required: true,
+                          options: doctors.map(d => ({ value: d.name, label: d.name })) },
+                        { name: 'description', label: 'Description', type: 'textarea', required: false },
+                        { name: 'doctors', label: 'Number of Doctors', type: 'number', required: true },
+                        { name: 'students', label: 'Number of Students', type: 'number', required: true },
+                        { name: 'status', label: 'Status', type: 'select', required: true,
+                          options: [
+                              { value: 'Active', label: 'Active' },
+                              { value: 'Inactive', label: 'Inactive' }
+                          ]
+                        }
+                    ];
+                case 'round':
+                    return [
+                        { name: 'name', label: 'Round Name', type: 'text', required: true },
+                        { name: 'department', label: 'Department', type: 'select', required: true,
+                          options: departments.map(d => ({ value: d.name, label: d.name })) },
+                        { name: 'doctor', label: 'Supervising Doctor', type: 'select', required: true,
+                          options: doctors.map(d => ({ value: d.name, label: d.name })) },
+                        { name: 'students', label: 'Number of Students', type: 'number', required: true },
+                        { name: 'datetime', label: 'Date & Time', type: 'datetime-local', required: true },
+                        { name: 'status', label: 'Status', type: 'select', required: true,
+                          options: [
+                              { value: 'Scheduled', label: 'Scheduled' },
+                              { value: 'Active', label: 'Active' },
+                              { value: 'Completed', label: 'Completed' },
+                              { value: 'Cancelled', label: 'Cancelled' }
+                          ]
+                        }
+                    ];
+                case 'patient':
+                    return [
+                        { name: 'name', label: 'Full Name', type: 'text', required: true },
+                        { name: 'age', label: 'Age', type: 'number', required: true },
+                        { name: 'gender', label: 'Gender', type: 'select', required: true,
+                          options: [
+                              { value: 'Male', label: 'Male' },
+                              { value: 'Female', label: 'Female' },
+                              { value: 'Other', label: 'Other' }
+                          ]
+                        },
+                        { name: 'phone', label: 'Phone', type: 'tel', required: true },
+                        { name: 'email', label: 'Email', type: 'email', required: true },
+                        { name: 'address', label: 'Address', type: 'text', required: true },
+                        { name: 'condition', label: 'Medical Condition', type: 'text', required: true },
+                        { name: 'status', label: 'Status', type: 'select', required: true,
+                          options: [
+                              { value: 'Active', label: 'Active' },
+                              { value: 'In Treatment', label: 'In Treatment' },
+                              { value: 'Discharged', label: 'Discharged' },
+                              { value: 'Emergency', label: 'Emergency' }
+                          ]
+                        }
+                    ];
+                default:
+                    return [];
+            }
+        }
+
+        function validateForm(formData, type) {
+            const errors = [];
+            
+            // Check required fields
+            const requiredFields = getFieldsForType(type).filter(f => f.required).map(f => f.name);
+            requiredFields.forEach(field => {
+                if (!formData[field] || formData[field].trim() === '') {
+                    errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} is required`);
+                }
+            });
+            
+            // Email validation
+            if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+                errors.push('Please enter a valid email address');
+            }
+            
+            // Phone validation (basic)
+            if (formData.phone && !/^[\+]?[0-9\-\s\(\)]+$/.test(formData.phone)) {
+                errors.push('Please enter a valid phone number');
+            }
+            
+            // Number validation
+            ['doctors', 'students', 'cases'].forEach(field => {
+                if (formData[field] && (isNaN(formData[field]) || parseInt(formData[field]) < 0)) {
+                    errors.push(`${field.charAt(0).toUpperCase() + field.slice(1)} must be a valid positive number`);
+                }
+            });
+            
+            return errors;
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i> Saving...';
+            submitButton.disabled = true;
+            
+            // Clear previous errors
+            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+            
+            const formData = new FormData(e.target);
+            const newItem = {};
+            
+            // Fixed: Corrected for...of loop syntax
+            for (const [key, value] of formData.entries()) {
+                newItem[key] = value;
+            }
+            
+            // Validate form
+            const errors = validateForm(newItem, currentEditingType);
+            if (errors.length > 0) {
+                showValidationErrors(errors);
+                // Reset button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+                return;
+            }
+            
+            try {
+                // Convert numeric fields
+                if (newItem.doctors) newItem.doctors = parseInt(newItem.doctors);
+                if (newItem.students) newItem.students = parseInt(newItem.students);
+                if (newItem.cases) newItem.cases = parseInt(newItem.cases);
+                
+                if (currentEditingItem) {
+                    // Update existing item
+                    Object.assign(currentEditingItem, newItem);
+                } else {
+                    // Add new item
+                    newItem.id = generateId(currentEditingType);
+                    
+                    switch(currentEditingType) {
+                        case 'doctor':
+                            doctors.push(newItem);
+                            break;
+                        case 'student':
+                            students.push(newItem);
+                            break;
+                        case 'department':
+                            departments.push(newItem);
+                            break;
+                        case 'round':
+                            rounds.push(newItem);
+                            break;
+                        case 'patient':
+                            patients.push(newItem);
+                            break;
+                    }
+                }
+                
+                // Simulate API delay
+                setTimeout(() => {
+                    populateAllTables();
+                    renderQueues();
+                    updateDashboardStats();
+                    closeModal();
+                    
+                    const action = currentEditingItem ? 'updated' : 'added';
+                    const itemType = currentEditingType.charAt(0).toUpperCase() + currentEditingType.slice(0, -1);
+                    showNotification(`${itemType} ${action} successfully!`, 'success');
+                    
+                    // Reset button state
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
+                }, 500);
+                
+            } catch (error) {
+                showNotification('Error saving item. Please try again.', 'error');
+                console.error('Form submission error:', error);
+                
+                // Reset button state
+                submitButton.innerHTML = originalText;
+                submitButton.disabled = false;
+            }
+        }
+
+        function showValidationErrors(errors) {
+            // Show all validation errors
+            errors.forEach(error => {
+                showNotification(error, 'error');
+            });
+            
+            // Highlight first invalid field
+            const firstErrorField = document.querySelector('input:invalid, select:invalid, textarea:invalid');
+            if (firstErrorField) {
+                firstErrorField.classList.add('field-error');
+                firstErrorField.focus();
+            }
+        }
+
+        function generateId(type) {
+            let prefix;
+            let data;
+            
+            switch(type) {
+                case 'doctor':
+                    prefix = 'D';
+                    data = doctors;
+                    break;
+                case 'student':
+                    prefix = 'S';
+                    data = students;
+                    break;
+                case 'department':
+                    prefix = 'DEP';
+                    data = departments;
+                    break;
+                case 'round':
+                    prefix = 'R';
+                    data = rounds;
+                    break;
+                case 'patient':
+                    prefix = 'P';
+                    data = patients;
+                    break;
+                default:
+                    return null;
+            }
+            
+            const maxNum = data.length > 0 ? 
+                Math.max(...data.map(item => parseInt(item.id.replace(prefix, '')))) : 0;
+            
+            return prefix + String(maxNum + 1).padStart(3, '0');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('addEditModal');
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = 'auto';
+            
+            currentEditingItem = null;
+            currentEditingType = null;
+            
+            document.getElementById('addEditForm').reset();
+            
+            // Clear any validation errors
+            document.querySelectorAll('.field-error').forEach(el => el.classList.remove('field-error'));
+            document.querySelectorAll('.error-message').forEach(el => el.remove());
+            
+            // Return focus to the element that opened the modal
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.blur) {
+                activeElement.blur();
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            // Remove existing notifications
+            document.querySelectorAll('.notification').forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.animation = 'slideInRight 0.3s ease-out';
+            
+            // Add icon based on type
+            const icon = document.createElement('i');
+            icon.className = type === 'error' ? 'fas fa-exclamation-circle' : 
+                           type === 'warning' ? 'fas fa-exclamation-triangle' : 
+                           'fas fa-check-circle';
+            icon.setAttribute('aria-hidden', 'true');
+            
+            const text = document.createElement('span');
+            text.textContent = message;
+            
+            notification.appendChild(icon);
+            notification.appendChild(text);
+            notification.setAttribute('role', 'alert');
+            notification.setAttribute('aria-live', 'polite');
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds for errors, 3 seconds for success
+            const timeout = type === 'error' ? 5000 : 3000;
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutRight 0.3s ease-out forwards';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }
+            }, timeout);
+        }
+
+        // Export functions for debugging
+        window.MedicalDashboard = {
+            doctors,
+            students,
+            departments,
+            rounds,
+            patients,
+            openAddModal,
+            editItem,
+            deleteItem,
+            viewItem,
+            updateDashboardStats,
+            renderQueues
+        };
+    </script>
+</body>
+</html>
