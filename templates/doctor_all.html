@@ -848,18 +848,18 @@
         }
         /* Modal Styles */
        .modal {
-        display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            opacity: 0;
-            transition: all 0.3s ease;
-             overflow: auto; /* ✅ يخلي المودال نفسه يعمل scroll */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.226);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+    overflow: auto; /* ✅ يخلي المودال نفسه يعمل scroll */
 
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none;
@@ -869,9 +869,6 @@
 
         .modal.active {
             display: flex;
-            opacity: 1;
-            align-items: center;
-            justify-content: center;
         }
 
         .modal-content::-webkit-scrollbar {
@@ -879,15 +876,13 @@
 }
 
         .modal-content {
-           background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-             overflow-y: auto; /* ✅ يخلي المحتوى الداخلي يعمل scroll */
+            background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh; /* ✅ يحدّد أقصى ارتفاع */
+    overflow-y: auto; /* ✅ يخلي المحتوى الداخلي يعمل scroll */
     box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
     animation: slideUp 0.3s ease-out;
         }
@@ -1650,8 +1645,8 @@ select::-webkit-scrollbar-thumb:hover {
         <!-- Dashboard Section -->
         <section id="dashboard" class="page-section active">
              <div class="page-header">
-                <i class="fas fa-home"></i>
-                <h1>Doctor Dashboard</h1>
+              <i class="fa-solid fa-circle-user"></i>
+                <h1 id="DoctorName"></h1>
             </div>
             <div class="info-card">
                         <div class="card-title">
@@ -1660,28 +1655,29 @@ select::-webkit-scrollbar-thumb:hover {
                         </div>
                         <div class="form-grid">
                             <div class="form-field">
-                                <div class="form-label">Gender</div>
-                                <div class="form-value">Female</div>
+                                <div class="form-label">ID</div>
+                                <div class="form-value" id="DoctorID"></div>
                             </div>
                             <div class="form-field">
-                                <div class="form-label">Date of Birth</div>
-                                <div class="form-value">March 15, 1985</div>
+                                <div class="form-label">Title</div>
+                                <div class="form-value" id="DoctorTitle"></div>
                             </div>
                             <div class="form-field">
-                                <div class="form-label">Phone</div>
-                                <div class="form-value">(555) 123-4567</div>
+                                <div class="form-label">Department ID</div>
+                                <div class="form-value" id="DoctorDepID"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department</div>
+                                <div class="form-value" id="DoctorDepName"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department Manager</div>
+                                <div class="form-value" id="DoctorDepManager"></div>
                             </div>
                             <div class="form-field">
                                 <div class="form-label">Email</div>
-                                <div class="form-value">sarah.johnson@email.com</div>
+                                <div class="form-value" id="DoctorEmail"></div>
                             </div>
-                            <div class="form-field full-width">
-                                <div class="form-label">Address</div>
-                                <div class="form-value">123 Main Street, New York, NY 10001</div>
-                            </div>
-                            
-    
-                         
                         </div>
                     </div>
            
@@ -1780,7 +1776,15 @@ select::-webkit-scrollbar-thumb:hover {
         <textarea type="text" class="d-input" id="viewTreatment" readonly></textarea>
       </div>
 
-     
+      <div class="form-group department_view">
+        <label class="form-label">department</label>
+        <input type="text" class="form-input" id="viewDepartment" readonly>
+      </div>
+
+      <div class="form-group date_view">
+        <label class="form-label">date</label>
+        <input type="date" class="form-input" id="viewDate" readonly>
+      </div>
 
       
     </form>
@@ -1788,7 +1792,7 @@ select::-webkit-scrollbar-thumb:hover {
 </div>
 
 <!-- Edit Feedback Modal -->
-<div id="editModal" class="modal">
+<!-- <div id="editModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h4 class="modal-title">Edit Patient</h4>
@@ -1835,7 +1839,7 @@ select::-webkit-scrollbar-thumb:hover {
       </button>
     </form>
   </div>
-</div>
+</div> -->
 
         </div>
 
@@ -1882,9 +1886,9 @@ select::-webkit-scrollbar-thumb:hover {
         <section id="patients" class="page-section">
             <!-- Patient Header -->
             <div class="patient-header">
-                <div class="patient-header-avatar">SJ</div>
+                <div class="patient-header-avatar"></div>
                 <div class="patient-header-info">
-                    <h1>Sarah Johnson</h1>
+                    <h1></h1>
                 </div>
             </div>
 
@@ -1895,7 +1899,7 @@ select::-webkit-scrollbar-thumb:hover {
                     <!-- Basic Information -->
                    <div class="info-card">
                        
-                          <form>
+<form onsubmit="return postEditCase(event)">
       <div class="form-group">
         <label  class="form-label">Case ID</label>
         <input type="text" class="form-input" id="docPatientid" readonly>
@@ -1903,7 +1907,7 @@ select::-webkit-scrollbar-thumb:hover {
 
       <div class="form-group">
         <label class="form-label" for="before-upload">Before Photo</label>
-        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="docbeforeImg">
+        <img src="" class="img" id="docbeforeImg">
     </div>
 
         <!-- مودال الصورة -->
@@ -1918,14 +1922,28 @@ select::-webkit-scrollbar-thumb:hover {
             <img id="docmodalImg" src="">
         </div>
 
-      <div class="form-group">
+      <div class="form-group after_doc">
         <label class="form-label" for="after-upload">after Photo</label>
-        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="docafterImg">
+        <img src="" class="img" id="docafterImg">
     </div>
 
-       <div class="form-group">
+       <div class="form-group treatment_doc">
         <label class="form-label">treatment</label>
         <textarea type="text" class="d-input" id="docviewdtreatment"  ></textarea>
+      </div>
+
+    <div class="form-group dep">
+    <label class="form-label">Department</label>
+    <select class="form-select" id="docViewDepartment">
+        {% for dep in departments %}
+            <option value="{{ dep }}">{{ dep }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+    <div class="form-group treatment_doc">
+        <label class="form-label">Notes</label>
+        <textarea type="text" class="d-input" id="docviewNotes"  ></textarea>
       </div>
 
 
@@ -1937,11 +1955,11 @@ select::-webkit-scrollbar-thumb:hover {
                     <label class="form-label">Student approval</label>
                     <div class="radio-group">
                         <label class="radio-option">
-                            <input type="radio" name="attendance"  value="true" checked>
+                            <input type="radio" name="attendance"  value="1" checked>
                             <span>approve</span>
                         </label>
                         <label class="radio-option">
-                            <input type="radio" name="attendance"  value="false">
+                            <input type="radio" name="attendance"  value="0">
                             <span>reject</span>
                         </label>
                     </div>
@@ -2115,7 +2133,7 @@ select::-webkit-scrollbar-thumb:hover {
             </div>
         </div>
     </div>
-        <div id="caseViewModal" class="modal" style="display: none;">
+<div id="caseViewModal" class="modal" style="display: none;">
     <div class="modal-content">
         <span class="close" onclick="closeModal('caseViewModal')">&times;</span>
         <h3>Case Details</h3>
@@ -2141,16 +2159,24 @@ select::-webkit-scrollbar-thumb:hover {
             <img id="docmodalImg" src="">
         </div>
 
-      <div class="form-group">
+      <div class="form-group case_after">
         <label class="form-label" for="after-upload">after Photo</label>
         <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="caseafterImg">
     </div>
 
-       <div class="form-group">
+       <div class="form-group case_treatment">
         <label class="form-label">treatment</label>
         <textarea type="text" class="d-input" id="caseviewdtreatment"  ></textarea>
       </div>
+       <div class="form-group case_department">
+        <label  class="form-label">Department</label>
+        <input type="text" class="form-input" id="caseviewDepartment" readonly>
+      </div>
+
+
     </div>
+
+    
 </div>
 </div>
 
@@ -2410,141 +2436,312 @@ select::-webkit-scrollbar-thumb:hover {
     </main>
 
     <script>
+
         
-        const DEPARTMENT = ""
+  // ============================================================
+// GLOBAL VARIABLES
+// ============================================================
+const urlParams = new URLSearchParams(window.location.search);
+const doctorID = urlParams.get("doctor_id");
+let department = "";
+let Cases = [];
+let currentStudentId1 = '';
+let currentCases = [];
+let currentStudentId = null;
+let editIndex = null;
 
-         const students = [
-            { id: 'S001', name: 'John Doe', casesCount: 5 },
-            { id: 'S002', name: 'Jane Smith', casesCount: 3 },
-           
-        ];
+// ============================================================
+// SAMPLE DATA
+// ============================================================
+const students = [
+    { id: 'S001', name: 'John Doe', casesCount: 5 },
+    { id: 'S002', name: 'Jane Smith', casesCount: 3 },
+];
 
-        // Sample cases data
-        const casesData = {
-            'S001': [
-                { id: 'C001', description: 'Database Issue', approval: 'Approved', date: '2024-01-15', 
-                before:"00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", after:"00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
-            treatment:"Panadol" },
-                  ],
-            'S002': [
-                { id: 'C006', description: 'Email Configuration', approval: 'Rejected', date: '2024-01-13',
-                     before:"00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", after:"00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
-            treatment:"Panadol"
-                 },
-                          ]
-            
+const casesData = {
+    'S001': [
+        { 
+            id: 'C001', 
+            description: 'Database Issue', 
+            approval: 'Approved', 
+            date: '2024-01-15', 
+            before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", 
+            after: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
+            treatment: "Panadol" 
+        },
+    ],
+    'S002': [
+        { 
+            id: 'C006', 
+            description: 'Email Configuration', 
+            approval: 'Rejected', 
+            date: '2024-01-13',
+            before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", 
+            after: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
+            treatment: "Panadol"
+        },
+    ]
+};
+
+const process = [
+    { 
+        ID: "1", 
+        name: "Sayed", 
+        description: "Excellent performance in AI fundamentals. Shows great potential.", 
+        treatment: "panadol", 
+        before: "url.png", 
+        after: "url.png", 
+        depart: "unknown",
+        date: "2005-08-08", 
+        approval: "pending" 
+    },
+    { 
+        ID: "2", 
+        name: "Ahmed", 
+        description: "Good progress but needs more practice with machine learning algorithms.",
+        treatment: "panadol", 
+        before: "url.png", 
+        after: "url.png", 
+        depart: "unknown",
+        date: "2005-08-08", 
+        approval: "approved"  
+    },
+    { 
+        ID: "3", 
+        name: "Ahmed", 
+        description: "Good progress but needs more practice with machine learning algorithms.",
+        treatment: "panadol", 
+        before: "url.png", 
+        after: "url.png", 
+        depart: "diagnosis", 
+        date: "2025-03-15", 
+        approval: "rejected"  
+    },
+    { 
+        ID: "4", 
+        name: "Sara", 
+        description: "Excellent performance in diagnostics.",
+        treatment: "aspirin", 
+        before: "url.png", 
+        after: "url.png", 
+        depart: "diagnosis", 
+        date: "2024-08-20", 
+        approval: "approved" 
+    },
+];
+
+const student_patient = {
+    'sarah-johnson': {
+        avatar: 'SJ',
+        name: 'Sarah Johnson',
+        badge: 'Premium Member',
+        info: {
+            gender: 'Female',
+            dob: 'March 15, 1985',
+            phone: '(555) 123-4567',
+            email: 'sarah.johnson@email.com',
+            address: '123 Main Street, New York, NY 10001',
+            emergency: 'John Johnson - (555) 987-6543'
+        },
+        insurance: {
+            policy: 'HC-2024-789456',
+            expires: 'December 31, 2024',
+            provider: 'HealthCare Plus',
+            status: 'Active Coverage'
+        }
+    },
+    'mike-chen': {
+        avatar: 'MC',
+        name: 'Mike Chen',
+        badge: 'Standard Member',
+        info: {
+            gender: 'Male',
+            dob: 'July 22, 1990',
+            phone: '(555) 234-5678',
+            email: 'mike.chen@email.com',
+            address: '456 Oak Avenue, Los Angeles, CA 90210',
+            emergency: 'Lisa Chen - (555) 876-5432'
+        },
+        insurance: {
+            policy: 'HC-2024-234567',
+            expires: 'June 30, 2024',
+            provider: 'MediCare Pro',
+            status: 'Active Coverage'
+        }
+    },
+};
+
+// ============================================================
+// API DATA LOADING FUNCTIONS
+// ============================================================
+async function load_doctor_data(doctorID) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/doctor/data/${doctorID}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const doctor_data = result.data;
+            console.log("Doctor data:", doctor_data);
+            return doctor_data;
+        } else {
+            alert(result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error loading doctor data:", error);
+        alert("Error for fetch data");
+        return null;
+    }
+}
+
+async function set_doctor_data(doctorID) {
+    const doctor_data = await load_doctor_data(doctorID);
+
+    if (doctor_data) {
+        const setTextContent = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = value || '';
         };
 
-        let currentStudentId = null;
+        setTextContent("DoctorName", doctor_data.name);
+        setTextContent("DoctorID", doctor_data.faculty_members_id);
+        setTextContent("DoctorDepID", doctor_data.department_id);
+        setTextContent("DoctorDepName", doctor_data.department_name);
+        setTextContent("DoctorEmail", doctor_data.email);
+        setTextContent("DoctorTitle", doctor_data.title);
+        setTextContent("DoctorDepManager", doctor_data.manager);
 
-        // Initialize the application
-        function init() {
-            populateStudentsTable();
-            setupModalEvents();
+        department = doctor_data.department_id || "";
+    }
+    return department;
+}
+
+async function load_doctor_student_cases(doctorID) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/doctor/student/cases/${doctorID}`);
+        const result = await response.json();
+
+        if (result.success) {
+            Cases = result.data;
+            console.log("Doctor cases loaded:", Cases);
+            renderQueue();
+        } else {
+            alert(result.message);
         }
+    } catch (error) {
+        console.error("Error loading doctor data:", error);
+        alert("Error Loading cases");
+    }
+}
 
-        // Populate students table
-        function populateStudentsTable() {
-            const tbody = document.getElementById('StudentApproval');
-            tbody.innerHTML = '';
 
-            students.forEach(student => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${student.id}</td>
-                    <td>${student.name}</td>
-                    <td>${student.casesCount}</td>
-                    <td>
-                        <button class="btn-approval" onclick="openApprovalModal('${student.id}')">
-                            Approve
-                        </button>
-                    </td>
-                    <td>
-                        <button class="btn-cases" onclick="showCasesPage('${student.id}')">
-                            View Cases
-                        </button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
 
-        // Open approval modal
-        function openApprovalModal(studentId) {
-            currentStudentId = studentId;
-            document.getElementById('modalStudentId').textContent = studentId;
-            document.getElementById('approvalModal').style.display = 'block';
-            
-            // Clear previous radio button selections
-            const radioButtons = document.querySelectorAll('input[name="approval"]');
-            radioButtons.forEach(radio => radio.checked = false);
-        }
+async function postEditCase(event) {
+    event.preventDefault();
+    
+    try {
+        // ❶ جمع البيانات من الـ HTML
+        const case_id = document.getElementById("docPatientid").value;
+        const department_id = document.getElementById("DoctorDepID").innerText;
+        const description = document.getElementById("docviewdescription").value;
+        const treatment = document.getElementById("docviewdtreatment").value;
+        const department = document.getElementById("docViewDepartment").value;
+        const notes = document.getElementById("docviewNotes").value;
+        const selected = document.querySelector('input[name="attendance"]:checked');
+        const approval = selected ? selected.value : "-1";
 
-        // Close modal
-        function closeModal() {
-            document.getElementById('approvalModal').style.display = 'none';
-            currentStudentId = null;
-        }
 
-        // Submit approval
-        function submitApproval() {
-            const selectedOption = document.querySelector('input[name="approval"]:checked');
-            
-            if (!selectedOption) {
-                alert('Please select an approval option.');
-                return;
-            }
+        // ❷ التحقق من البيانات قبل الإرسال
+        console.log("=== Debug: Form Data ===");
+        console.log("Case ID:", case_id);
+        console.log("Description:", description);
+        console.log("Treatment:", treatment);
+        console.log("Department:", department);
+        console.log("approval:", approval);
+        console.log("notes:", notes);
 
-            const approval = selectedOption.value;
-            const studentId = currentStudentId;
-            
-            // Here you would typically send the data to your server
-            console.log(`Student ${studentId} approval: ${approval}`);
-            alert(`Approval submitted for Student ${studentId}: ${approval === 'approve' ? 'Approved' : 'Not Approved'}`);
-            
-            closeModal();
-        }
-
-        // Show cases page
-        function showCasesPage(studentId) {
-            document.getElementById('currentStudentId').textContent = studentId;
-            populateCasesTable(studentId);
-            
-            // Hide students table and show cases page
-            document.getElementById('approvment').style.display = 'none';
-            document.getElementById('casesPage').style.display = 'block';
-        }
-
-         const student_process = [
-            { ID: "1",name: "Sayed", description: "Excellent performance in AI fundamentals. Shows great potential.", 
-            treatment: "panadol", before: "url.png", after: "url.png", depart: "unkown",date : "2005-08-08", approval : "none" },
-
-            { ID: "2",name: "Ahmed", description: "Good progress but needs more practice with machine learning algorithms.",
-             treatment: "panadol", before: "url.png", after: "url.png", depart: "unkown",date : "2005-08-08", approval : "ok"  },
-
-            { ID: "2",name: "Ahmed", description: "Good progress but needs more practice with machine learning algorithms.",
-             treatment: "panadol", before: "url.png", after: "url.png", depart: "siagnosis", date : "2005-08-08", approval : "no"  },
         
-        ];
-        // Populate cases table
-       let currentStudentId1 = '';
-let currentCases = [];
 
+        
+        // ❺ إنشاء FormData
+        const formData = new FormData();
+        formData.append("case_id", case_id);
+        formData.append("department_id", department_id);
+        formData.append("description", description);
+        formData.append("treatment", treatment);
+        formData.append("department", department);
+        formData.append("approval", approval);
+        formData.append("notes", notes);
+        
+        
+
+        // ❻ طباعة محتويات FormData للتأكد
+        console.log("=== FormData Contents ===");
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, ":", value.name, `(${value.size} bytes)`);
+            } else {
+                console.log(key, ":", value);
+            }
+        }
+        console.log("========================");
+
+        // ❼ إرسال الطلب
+        console.log("Sending request...");
+        const response = await fetch("http://127.0.0.1:8000/api/v1/approve/case", {
+            method: "POST",
+            body: formData
+            // ⚠️ لا تضع headers يدوياً - المتصفح يضعها تلقائياً مع FormData
+        });
+
+        console.log("Response status:", response.status);
+
+        // ❽ معالجة الرد
+        const result = await response.json();
+        console.log("Response data:", result);
+
+        if (response.ok && result.success) {
+            alert("Case updated successfully!");
+            // يمكنك إضافة كود هنا لإعادة تحميل الصفحة أو إغلاق النموذج
+            // location.reload(); // مثال
+        } else {
+            alert("Failed: " + (result.message || "Unknown error"));
+        }
+
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("Something went wrong! Check console for details.");
+    }
+}
+
+
+
+
+// ============================================================
+// STUDENT CASES FUNCTIONS
+// ============================================================
 function showCasesForStudent(studentId) {
     currentStudentId1 = studentId;
-    document.getElementById('currentStudentId').textContent = studentId;
+    const currentStudentIdEl = document.getElementById('currentStudentId');
+    if (currentStudentIdEl) {
+        currentStudentIdEl.textContent = studentId;
+    }
     populateCasesTable(studentId);
     
-    // Show cases page (assuming you have navigation logic)
-    document.getElementById('casesPage').style.display = 'block';
+    const casesPage = document.getElementById('casesPage');
+    if (casesPage) {
+        casesPage.style.display = 'block';
+    }
 }
 
 function populateCasesTable(studentId) {
     const tbody = document.getElementById('casesTableBody');
+    if (!tbody) return;
+
     tbody.innerHTML = '';
 
     const cases = casesData[studentId] || [];
-    currentCases = cases; // Store current cases for modal usage
+    currentCases = cases;
     
     cases.forEach((caseItem, index) => {
         const row = document.createElement('tr');
@@ -2588,489 +2785,447 @@ function openViewModal1(index) {
     }
 
     const caseItem = currentCases[index];
-
-
-    
-    // Populate modal content
-   
-    
-    // Show modal
     const modal = document.getElementById("caseViewModal");
+    if (!modal) return;
+
     modal.style.display = "flex";
 
-    document.getElementById("casePatientid").value = caseItem.id;
-    document.getElementById("casebeforeImg").src = caseItem.before;
-    document.getElementById("caseviewdescription").value = caseItem.description;
-    document.getElementById("caseafterImg").src = caseItem.after;
-    document.getElementById("caseviewdtreatment").value = caseItem.treatment;
-   
-
-
-}
-
-
-
-function closeModal(id) {
-    document.getElementById(id).style.display = "none";
-}
-
-
-        // Show students table (back button)
-        function showStudentsTable() {
-            document.getElementById('casesPage').style.display = 'none';
-            document.getElementById('approvment').style.display = 'block';
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value || '';
+            } else {
+                el.value = value || '';
+            }
         }
+    };
 
-        // Setup modal events
-        function setupModalEvents() {
-            const modal = document.getElementById('approvalModal');
-            const closeBtn = document.querySelector('.close');
+    if (department === "D001") {
+        setValue("casePatientid", caseItem.id);
+        setValue("casebeforeImg", caseItem.before);
+        setValue("caseviewdescription", caseItem.description);
+        setValue("caseviewDepartment", caseItem.treatment);
 
-            // Close modal when clicking the X
-            closeBtn.addEventListener('click', closeModal);
+        const treatmentGroup = document.querySelector(".form-group.case_treatment");
+        const afterGroup = document.querySelector(".form-group.case_after");
+        if (treatmentGroup) treatmentGroup.style.display = "none";
+        if (afterGroup) afterGroup.style.display = "none";
+    } else {
+        setValue("casePatientid", caseItem.id);
+        setValue("casebeforeImg", caseItem.before);
+        setValue("caseviewdescription", caseItem.description);
+        setValue("caseafterImg", caseItem.after);
+        setValue("caseviewdtreatment", caseItem.treatment);
 
-            // Close modal when clicking outside of it
-            window.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    closeModal();
-                }
-            });
-        }
-
-        // Search functionality (optional enhancement)
-        document.getElementById('searchName').addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const rows = document.querySelectorAll('#StudentApproval tr');
-            
-            rows.forEach(row => {
-                const nameCell = row.cells[1];
-                if (nameCell) {
-                    const name = nameCell.textContent.toLowerCase();
-                    row.style.display = name.includes(searchTerm) ? '' : 'none';
-                }
-            });
-        });
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', init);
-
-
-
-
-
-
-
-
-
-
-
-
-// Patient data array
-// Patient data array
-// Patient data array
-const Cases = [
-  { 
-    id: "200", 
-    name: "Sarah Johnson", 
-    before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
-    description: "very good", 
-    after:"h.png",
-    treatment:"panadol",
-    approve: "approve"
-  },
-  { 
-    id: "201", 
-    name: "Ahmed Sayed", 
-    before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
-    description: "excellent condition", 
-     after:"h.png",
-    treatment:"panadol",
-    approve: "approve" 
-  },
-  { 
-    id: "202", 
-    name: "Mona Ali", 
-    before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
-    description: "needs follow up", 
-     after:"h.png",
-    treatment:"panadol",
-    approve: "reject" 
-  },
-  { 
-    id: "203", 
-    name: "John Smith", 
-    before: "bg2.jpg",
-    description: "good progress", 
-     after:"bg.jpg",
-    treatment:"ccccc",
-    approve: "approve" 
-  }
-];
-
-// Function to create initials for avatar
-function getInitials(name) {
-  return name.split(" ").map(n => n[0]).join("").toUpperCase();
-}
-
-// Main function that links everything together
-function initializePatientManagement() {
-  renderQueue();
-  setupEventListeners();
-  // Load first patient by default
-  if (Cases.length > 0) {
-    loadPatientDetails(Cases[0].id);
-  }
-}
-
-// Render patient queue
-function renderQueue() {
-  const patientList = document.getElementById("patientList");
-  const queueCount = document.getElementById("queueCount");
-
-  if (!patientList || !queueCount) {
-    console.error("Patient list or queue count elements not found");
-    return;
-  }
-
-  // Clear old cards
-  patientList.innerHTML = "";
-
-  // Build new cards from patients array
-  Cases.forEach((patient, index) => {
-    const card = document.createElement("div");
-    card.className = "patient-card";
-    if (index === 0) card.classList.add("active");
-    card.dataset.patientId = patient.id;
-
-    card.innerHTML = `
-      <div class="patient-avatar">${getInitials(patient.name)}</div>
-      <div class="patient-info">
-        <div class="patient-name">${patient.name}</div>
-        <div class="patient-date">Case ID: ${patient.id}</div>
-      </div>
-    `;
-
-    patientList.appendChild(card);
-  });
-
-  // Update counter
-  queueCount.textContent = `${Cases.length} patients today`;
-}
-
-// Load patient details into the existing form
-function loadPatientDetails(patientId) {
-  const patient = Cases.find(p => p.id === patientId);
-  
-  if (!patient) {
-    console.error("Patient not found:", patientId);
-    return;
-  }
-
-  // Update patient header (if exists)
-  const headerAvatar = document.querySelector(".patient-header-avatar");
-  const headerName = document.querySelector(".patient-header-info h1");
-  
-  if (headerAvatar) headerAvatar.textContent = getInitials(patient.name);
-  if (headerName) headerName.textContent = patient.name;
-
-  // Update form fields
-  const caseIdInput = document.getElementById("docPatientid");
-  const descriptionTextarea = document.getElementById("docviewdescription");
-  const beforeImg = document.getElementById("docbeforeImg");
-  const afterImg = document.getElementById("docafterImg");
-  const treatment = document.getElementById("docviewdtreatment");
-
-  if (caseIdInput) {
-    caseIdInput.value = patient.id;
-    console.log("Case ID loaded:", patient.id);
-  }
-  
-  if (descriptionTextarea) {
-    descriptionTextarea.value = patient.description;
-    console.log("Description loaded:", patient.description);
-  }
-  
-  if (beforeImg) {
-    beforeImg.src = patient.before
-    console.log("Department loaded:", patient.department);
-  }
-  
-  if (afterImg) {
-    afterImg.src = patient.after
-    console.log("Date loaded:", patient.date);
-  }
-  
-  if (treatment) {
-    treatment.value = patient.treatment;
-    console.log("Image loaded:", patient.before);
-  }
-
-  // Update approval radio buttons
-  const approvalRadios = document.querySelectorAll('input[name="attendance"]');
-  approvalRadios.forEach(radio => {
-    radio.checked = false; // Clear all first
-    if ((radio.value === "true" && patient.approve === "approve") ||
-        (radio.value === "false" && patient.approve === "reject")) {
-      radio.checked = true;
-      console.log("Approval set to:", patient.approve);
+        const departmentGroup = document.querySelector(".form-group.case_department");
+        if (departmentGroup) departmentGroup.style.display = "none";
     }
-  });
-
-  // Update active card in queue
-  updateActiveCard(patientId);
-  
-  console.log("Patient loaded successfully:", patient.name);
 }
 
-// Update active card styling
-function updateActiveCard(patientId) {
-  const cards = document.querySelectorAll(".patient-card");
-  cards.forEach(card => {
-    card.classList.remove("active");
-    if (card.dataset.patientId === patientId) {
-      card.classList.add("active");
-    }
-  });
+function showStudentsTable() {
+    const casesPage = document.getElementById('casesPage');
+    const approvment = document.getElementById('approvment');
+    
+    if (casesPage) casesPage.style.display = 'none';
+    if (approvment) approvment.style.display = 'block';
 }
 
-// Setup event listeners
-function setupEventListeners() {
-  // Patient card click events - loads data into existing form
-  document.addEventListener('click', function(e) {
-    const card = e.target.closest('.patient-card');
-    if (card && card.dataset.patientId) {
-      loadPatientDetails(card.dataset.patientId);
-    }
-  });
+// ============================================================
+// APPROVAL MODAL FUNCTIONS
+// ============================================================
+function populateStudentsTable() {
+    const tbody = document.getElementById('StudentApproval');
+    if (!tbody) return;
 
-  // Form submission
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      savePatientData();
+    tbody.innerHTML = '';
+
+    students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${student.id}</td>
+            <td>${student.name}</td>
+            <td>${student.casesCount}</td>
+            <td>
+                <button class="btn-approval" onclick="openApprovalModal('${student.id}')">
+                    Approve
+                </button>
+            </td>
+            <td>
+                <button class="btn-cases" onclick="showCasesPage('${student.id}')">
+                    View Cases
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
     });
-  }
-
-
 }
 
-// Save patient data from the existing form
-function savePatientData() {
-  const caseId = document.getElementById("viewPatientid")?.value;
-  const description = document.getElementById("viewdescription")?.value;
-  const department = document.getElementById("editDepartment")?.value;
-  const date = document.getElementById("editDate")?.value;
-  const approvalRadio = document.querySelector('input[name="attendance"]:checked');
-  
-  if (!caseId) {
-    alert("No patient selected");
-    return;
-  }
+function openApprovalModal(studentId) {
+    currentStudentId = studentId;
+    const modalStudentId = document.getElementById('modalStudentId');
+    const approvalModal = document.getElementById('approvalModal');
+    
+    if (modalStudentId) modalStudentId.textContent = studentId;
+    if (approvalModal) approvalModal.style.display = 'block';
+    
+    const radioButtons = document.querySelectorAll('input[name="approval"]');
+    radioButtons.forEach(radio => radio.checked = false);
+}
 
-  const patientIndex = Cases.findIndex(p => p.id === caseId);
-  if (patientIndex !== -1) {
-    // Update patient data
-    Cases[patientIndex].description = description || Cases[patientIndex].description;
-    Cases[patientIndex].department = department || Cases[patientIndex].department;
-    Cases[patientIndex].date = date || Cases[patientIndex].date;
-    Cases[patientIndex].approve = approvalRadio?.value === "true" ? "approve" : "reject";
+function submitApproval() {
+    const selectedOption = document.querySelector('input[name="approval"]:checked');
     
-    alert("Patient data saved successfully!");
-    console.log("Updated patient:", Cases[patientIndex]);
-    
-    // Optionally update the patient name in header if it was changed
-    const headerName = document.querySelector(".patient-header-info h1");
-    if (headerName) {
-      headerName.textContent = Cases[patientIndex].name;
+    if (!selectedOption) {
+        alert('Please select an approval option.');
+        return;
     }
-  } else {
-    alert("Error: Patient not found!");
-  }
+
+    const approval = selectedOption.value;
+    const studentId = currentStudentId;
+    
+    console.log(`Student ${studentId} approval: ${approval}`);
+    alert(`Approval submitted for Student ${studentId}: ${approval === 'approve' ? 'Approved' : 'Not Approved'}`);
+    
+    closeModal('approvalModal');
 }
 
-// Search/filter patients
+function showCasesPage(studentId) {
+    const currentStudentIdEl = document.getElementById('currentStudentId');
+    if (currentStudentIdEl) {
+        currentStudentIdEl.textContent = studentId;
+    }
+    
+    populateCasesTable(studentId);
+    
+    const approvment = document.getElementById('approvment');
+    const casesPage = document.getElementById('casesPage');
+    
+    if (approvment) approvment.style.display = 'none';
+    if (casesPage) casesPage.style.display = 'block';
+}
+
+// ============================================================
+// PATIENT QUEUE MANAGEMENT
+// ============================================================
+function getInitials(name) {
+    return name.split(" ").map(n => n[0]).join("").toUpperCase();
+}
+
+function renderQueue() {
+    const patientList = document.getElementById("patientList");
+    const queueCount = document.getElementById("queueCount");
+
+    if (!patientList || !queueCount) {
+        console.error("Patient list or queue count elements not found");
+        return;
+    }
+
+    patientList.innerHTML = "";
+
+    Cases.forEach((patient, index) => {
+        const card = document.createElement("div");
+        card.className = "patient-card";
+        if (index === 0) card.classList.add("active");
+        card.dataset.patientId = patient.id;
+
+        card.innerHTML = `
+            <div class="patient-avatar">${getInitials(patient.name)}</div>
+            <div class="patient-info">
+                <div class="patient-name">${patient.name}</div>
+                <div class="patient-date">Case ID: ${patient.id}</div>
+            </div>
+        `;
+
+        // Add click event directly to card
+        card.addEventListener('click', function() {
+            // Remove active from all cards
+            document.querySelectorAll('.patient-card').forEach(c => c.classList.remove('active'));
+            // Add active to clicked card
+            card.classList.add('active');
+            // Load patient details into form
+            loadPatientDetails(patient.id);
+            
+            console.log("📋 Clicked patient:", patient.name, "ID:", patient.id);
+        });
+
+        patientList.appendChild(card);
+    });
+
+    queueCount.textContent = `${Cases.length} patients today`;
+}
+
+function loadPatientDetails(patientId) {
+    const patient = Cases.find(p => p.id === patientId);
+    
+    if (!patient) {
+        console.error("Patient not found:", patientId);
+        return;
+    }
+
+    console.log("🔍 Loading patient:", patient);
+
+    // Update patient header
+    const headerAvatar = document.querySelector(".patient-header-avatar");
+    const headerName = document.querySelector(".patient-header-info h1");
+    
+    if (headerAvatar) headerAvatar.textContent = getInitials(patient.name);
+    if (headerName) headerName.textContent = patient.name;
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value || '';
+                console.log(`🖼️ Set image ${id}:`, value);
+            } else {
+                el.value = value || '';
+                console.log(`📝 Set field ${id}:`, value);
+            }
+        } else {
+            console.warn(`⚠️ Element not found: ${id}`);
+        }
+    };
+
+    // Check if department is D001 (Diagnosis) or other departments
+    if (department === "D001") {
+        console.log("🏥 Loading for Diagnosis Department (D001)");
+        
+        setValue("docPatientid", patient.id);
+        setValue("docviewdescription", patient.description);
+        document.getElementById("docbeforeImg").src = `/static/uploads/${patient.before}`;
+        setValue("docViewDepartment", patient.department);
+        
+        // Hide treatment and after image fields for diagnosis department
+        const afterDoc = document.querySelector(".form-group.after_doc");
+        const treatmentDoc = document.querySelector(".form-group.treatment_doc");
+        if (afterDoc) afterDoc.style.display = "none";
+        if (treatmentDoc) treatmentDoc.style.display = "none";
+        
+        // Show department field
+        const depDoc = document.querySelector(".form-group.dep");
+        if (depDoc) depDoc.style.display = "block";
+        
+    } else {
+        console.log("🏥 Loading for Treatment Department");
+        
+        setValue("docPatientid", patient.id);
+        setValue("docviewdescription", patient.description);
+        document.getElementById("docbeforeImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("docafterImg").src = `/static/uploads/${patient.after}`;
+        setValue("docviewdtreatment", patient.treatment);
+        
+        // Hide department field for treatment departments
+        const dep = document.querySelector(".form-group.dep");
+        if (dep) dep.style.display = "none";
+        
+        // Show treatment and after image fields
+        const afterDoc = document.querySelector(".form-group.after_doc");
+        const treatmentDoc = document.querySelector(".form-group.treatment_doc");
+        if (afterDoc) afterDoc.style.display = "block";
+        if (treatmentDoc) treatmentDoc.style.display = "block";
+    }
+
+    // Update approval radio buttons
+    const approvalRadios = document.querySelectorAll('input[name="attendance"]');
+    approvalRadios.forEach(radio => {
+        radio.checked = false;
+        if ((radio.value === "true" && patient.approve === "approve") ||
+            (radio.value === "false" && patient.approve === "reject")) {
+            radio.checked = true;
+            console.log("✅ Approval set to:", patient.approve);
+        }
+    });
+
+    updateActiveCard(patientId);
+    
+    console.log("✅ Patient loaded successfully:", patient.name);
+}
+
+function updateActiveCard(patientId) {
+    const cards = document.querySelectorAll(".patient-card");
+    cards.forEach(card => {
+        card.classList.remove("active");
+        if (card.dataset.patientId === patientId) {
+            card.classList.add("active");
+        }
+    });
+}
+
+function savePatientData() {
+    const caseId = document.getElementById("viewPatientid")?.value;
+    const description = document.getElementById("viewdescription")?.value;
+    const departmentVal = document.getElementById("editDepartment")?.value;
+    const date = document.getElementById("editDate")?.value;
+    const approvalRadio = document.querySelector('input[name="attendance"]:checked');
+    
+    if (!caseId) {
+        alert("No patient selected");
+        return;
+    }
+
+    const patientIndex = Cases.findIndex(p => p.id === caseId);
+    if (patientIndex !== -1) {
+        Cases[patientIndex].description = description || Cases[patientIndex].description;
+        Cases[patientIndex].department = departmentVal || Cases[patientIndex].department;
+        Cases[patientIndex].date = date || Cases[patientIndex].date;
+        Cases[patientIndex].approve = approvalRadio?.value === "true" ? "approve" : "reject";
+        
+        alert("Patient data saved successfully!");
+        console.log("Updated patient:", Cases[patientIndex]);
+        
+        const headerName = document.querySelector(".patient-header-info h1");
+        if (headerName) {
+            headerName.textContent = Cases[patientIndex].name;
+        }
+    } else {
+        alert("Error: Patient not found!");
+    }
+}
+
 function searchPatients(searchTerm) {
-  const filteredCases = Cases.filter(patient => 
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    patient.id.includes(searchTerm)
-  );
-  
-  const patientList = document.getElementById("patientList");
-  const queueCount = document.getElementById("queueCount");
-  
-  if (!patientList || !queueCount) return;
+    const filteredCases = Cases.filter(patient => 
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.id.includes(searchTerm)
+    );
+    
+    const patientList = document.getElementById("patientList");
+    const queueCount = document.getElementById("queueCount");
+    
+    if (!patientList || !queueCount) return;
 
-  patientList.innerHTML = "";
-  
-  filteredCases.forEach((patient, index) => {
-    const card = document.createElement("div");
-    card.className = "patient-card";
-    if (index === 0) card.classList.add("active");
-    card.dataset.patientId = patient.id;
+    patientList.innerHTML = "";
+    
+    filteredCases.forEach((patient, index) => {
+        const card = document.createElement("div");
+        card.className = "patient-card";
+        if (index === 0) card.classList.add("active");
+        card.dataset.patientId = patient.id;
 
-    card.innerHTML = `
-      <div class="patient-avatar">${getInitials(patient.name)}</div>
-      <div class="patient-info">
-        <div class="patient-name">${patient.name}</div>
-        <div class="patient-date">Case ID: ${patient.id}</div>
-      </div>
-    `;
+        card.innerHTML = `
+            <div class="patient-avatar">${getInitials(patient.name)}</div>
+            <div class="patient-info">
+                <div class="patient-name">${patient.name}</div>
+                <div class="patient-date">Case ID: ${patient.id}</div>
+            </div>
+        `;
 
-    patientList.appendChild(card);
-  });
+        patientList.appendChild(card);
+    });
 
-  queueCount.textContent = `${filteredCases.length} patients today`;
-  
-  if (filteredCases.length > 0) {
-    loadPatientDetails(filteredCases[0].id);
-  }
+    queueCount.textContent = `${filteredCases.length} patients today`;
+    
+    if (filteredCases.length > 0) {
+        loadPatientDetails(filteredCases[0].id);
+    }
 }
 
-// Add new patient
 function addNewPatient(newPatient) {
-  Cases.push(newPatient);
-  renderQueue();
-  loadPatientDetails(newPatient.id);
+    Cases.push(newPatient);
+    renderQueue();
+    loadPatientDetails(newPatient.id);
 }
 
-// Get current patient data from form with new doc IDs
 function getCurrentPatientData() {
-  return {
-    id: document.getElementById("docPatientid")?.value,
-    description: document.getElementById("docviewdescription")?.value,
-    department: document.getElementById("doceditDepartment")?.value,
-    date: document.getElementById("doceditDate")?.value,
-    approve: document.querySelector('input[name="attendance"]:checked')?.value === "true" ? "approve" : "reject"
-  };
+    return {
+        id: document.getElementById("docPatientid")?.value,
+        description: document.getElementById("docviewdescription")?.value,
+        department: document.getElementById("doceditDepartment")?.value,
+        date: document.getElementById("doceditDate")?.value,
+        approve: document.querySelector('input[name="attendance"]:checked')?.value === "true" ? "approve" : "reject"
+    };
 }
 
-// Clear form with new doc IDs
 function clearForm() {
-  const caseIdInput = document.getElementById("docPatientid");
-  const descriptionTextarea = document.getElementById("docviewdescription");
-  const departmentSelect = document.getElementById("doceditDepartment");
-  const dateInput = document.getElementById("doceditDate");
-  const previewImg = document.getElementById("docpreviewImg");
-  const approvalRadios = document.querySelectorAll('input[name="attendance"]');
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value;
+            } else {
+                el.value = value;
+            }
+        }
+    };
 
-  if (caseIdInput) caseIdInput.value = "";
-  if (descriptionTextarea) descriptionTextarea.value = "";
-  if (departmentSelect) departmentSelect.value = "";
-  if (dateInput) dateInput.value = "";
-  if (previewImg) previewImg.src = "";
-  
-  approvalRadios.forEach(radio => {
-    radio.checked = false;
-  });
-  
-  // Clear header
-  const headerAvatar = document.querySelector(".patient-header-avatar");
-  const headerName = document.querySelector(".patient-header-info h1");
-  
-  if (headerAvatar) headerAvatar.textContent = "";
-  if (headerName) headerName.textContent = "";
-  
-  // Clear active cards
-  const cards = document.querySelectorAll(".patient-card");
-  cards.forEach(card => card.classList.remove("active"));
+    setValue("docPatientid", "");
+    setValue("docviewdescription", "");
+    setValue("doceditDepartment", "");
+    setValue("doceditDate", "");
+    setValue("docpreviewImg", "");
+    
+    const approvalRadios = document.querySelectorAll('input[name="attendance"]');
+    approvalRadios.forEach(radio => {
+        radio.checked = false;
+    });
+    
+    const headerAvatar = document.querySelector(".patient-header-avatar");
+    const headerName = document.querySelector(".patient-header-info h1");
+    
+    if (headerAvatar) headerAvatar.textContent = "";
+    if (headerName) headerName.textContent = "";
+    
+    const cards = document.querySelectorAll(".patient-card");
+    cards.forEach(card => card.classList.remove("active"));
 }
 
-// Initialize the system when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  initializePatientManagement();
-});
+function initializePatientManagement() {
+    renderQueue();
+    
+    if (Cases.length > 0) {
+        loadPatientDetails(Cases[0].id, department);
+    }
+}
 
-// Export functions for external use
-window.PatientManagement = {
-  init: initializePatientManagement,
-  loadPatient: loadPatientDetails,
-  searchPatients: searchPatients,
-  addPatient: addNewPatient,
-  saveData: savePatientData,
-  getCurrentData: getCurrentPatientData,
-  clearForm: clearForm,
-  getCases: () => Cases
-};
+// ============================================================
+// IMAGE MODAL FUNCTIONS
+// ============================================================
+function setupImageModals() {
+    const imageConfigs = [
+        { imgId: "previewImg", modalId: "imageModal", modalImgId: "modalImg" },
+        { imgId: "previewImgAfter", modalId: "imageModal", modalImgId: "modalImg" },
+        { imgId: "docbeforeImg", modalId: "docimageModal", modalImgId: "docmodalImg" },
+        { imgId: "docafterImg", modalId: "docimageModal", modalImgId: "docmodalImg" }
+    ];
 
+    imageConfigs.forEach(config => {
+        const img = document.getElementById(config.imgId);
+        const modal = document.getElementById(config.modalId);
+        const modalImg = document.getElementById(config.modalImgId);
 
+        if (img && modal && modalImg) {
+            img.addEventListener("click", function() {
+                modal.classList.add("active");
+                modalImg.src = this.src;
+            });
+        }
+    });
 
-        const img = document.getElementById("previewImg");
-        const img2 = document.getElementById("previewImgAfter");
-        const img3 = document.getElementById("docbeforeImg");
-        const img4 = document.getElementById("docafterImg");
-        const modal = document.getElementById("imageModal");
-        const modal1 = document.getElementById("docimageModal");
-        const closeBtn = document.getElementById("closeImage");
-
-        img.addEventListener("click", function () {
-            modal.classList.add("active");
-            modalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
+    const closeBtn = document.getElementById("closeImage");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+            const modal1 = document.getElementById("imageModal");
+            const modal2 = document.getElementById("docimageModal");
+            if (modal1) modal1.classList.remove("active");
+            if (modal2) modal2.classList.remove("active");
         });
+    }
 
-        img2.addEventListener("click", function () {
-            modal.classList.add("active");
-            modalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
-        });
-        img3.addEventListener("click", function () {
-            modal1.classList.add("active");
-            docmodalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
-        });
-        img4.addEventListener("click", function () {
-            modal1.classList.add("active");
-            docmodalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
-        });
+    ["imageModal", "docimageModal"].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.addEventListener("click", function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove("active");
+                }
+            });
+        }
+    });
+}
 
-
-        closeBtn.addEventListener("click", function () {
-            modal.classList.remove("active");
-        });
-        closeBtn.addEventListener("click", function () {
-            modal1.classList.remove("active");
-        });
-
-        // كمان لو دوست برا الصورة يتقفل
-        modal.addEventListener("click", function (e) {
-            if (e.target === modal) {
-                modal.classList.remove("active");
-            }
-        });
-        modal1.addEventListener("click", function (e) {
-            if (e.target === modal1) {
-                modal1.classList.remove("active");
-            }
-        });
-
-        
-
-
-
-        
-       
-
-        
-        // Patient data
-        
-
-
-
-
-
-const process = [
-    { ID: "1", name: "Sayed", description: "Excellent performance in AI fundamentals. Shows great potential.", 
-    treatment: "panadol", before: "url.png", after: "url.png", depart: "unkown", date: "2005-08-08", approval: "pending" },
-
-    { ID: "2", name: "Ahmed", description: "Good progress but needs more practice with machine learning algorithms.",
-     treatment: "panadol", before: "url.png", after: "url.png", depart: "unkown", date: "2005-08-08", approval: "approved" },
-
-    { ID: "3", name: "Ahmed", description: "Good progress but needs more practice with machine learning algorithms.",
-     treatment: "panadol", before: "url.png", after: "url.png", depart: "diagnosis", date: "2025-03-15", approval: "rejected" },
-
-    { ID: "4", name: "Sara", description: "Excellent performance in diagnostics.",
-     treatment: "aspirin", before: "url.png", after: "url.png", depart: "diagnosis", date: "2024-08-20", approval: "approved" },
-];
-
-// Flexible date filtering function
+// ============================================================
+// DATE FILTER FUNCTIONS
+// ============================================================
 function matchesDateFilter(recordDate, filterValue) {
     if (!filterValue || !recordDate) return true;
     
@@ -3085,7 +3240,6 @@ function matchesDateFilter(recordDate, filterValue) {
     const filterMonth = filter.getMonth();
     const filterDay = filter.getDate();
     
-    // Get the filter type based on what the user selected
     const filterType = getDateFilterType(filterValue);
     
     switch(filterType) {
@@ -3100,270 +3254,263 @@ function matchesDateFilter(recordDate, filterValue) {
     }
 }
 
-// Determine filter type based on the selected date
 function getDateFilterType(dateValue) {
     const date = new Date(dateValue);
     const month = date.getMonth();
     const day = date.getDate();
     
-    // If January 1st is selected, treat as year filter
     if (month === 0 && day === 1) {
         return 'year';
-    }
-    // If 1st of any month, treat as month+year filter
-    else if (day === 1) {
+    } else if (day === 1) {
         return 'month';
-    }
-    // Otherwise, exact date filter
-    else {
+    } else {
         return 'day';
     }
 }
 
-// Alternative approach: Add filter type selector
-function createDateFilterHTML() {
-    return `
-        <div class="date-filter-container">
-            <select id="dateFilterType">
-                <option value="all">All Dates</option>
-                <option value="year">By Year</option>
-                <option value="month">By Month & Year</option>
-                <option value="day">By Exact Date</option>
-            </select>
-            <input type="date" id="filterDate">
-            <input type="number" id="filterYear" placeholder="Year" min="2000" max="2030" style="display:none;">
-            <input type="month" id="filterMonth" style="display:none;">
-        </div>
-    `;
+// ============================================================
+// FEEDBACK TABLE FUNCTIONS
+// ============================================================
+function populateFeedbackTable() {
+    const tableBody = document.getElementById('feedbackTable');
+    if (!tableBody) return;
+
+    const searchInput = document.getElementById('searchName');
+    const dateInput = document.getElementById('filterDate');
+
+    const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+    const dateValue = dateInput ? dateInput.value : '';
+
+    tableBody.innerHTML = '';
+
+    process.forEach((feedback, index) => {
+        const matchName = feedback.name.toLowerCase().includes(searchValue);
+        const matchDate = matchesDateFilter(feedback.date, dateValue);
+
+        if (matchName && matchDate) {
+            const row = document.createElement('tr');
+            let approvalClass = "";
+            if (feedback.approval.toLowerCase() === "approved") {
+                approvalClass = "approval-ok";
+            } else if (feedback.approval.toLowerCase() === "pending") {
+                approvalClass = "approval-pending";
+            } else if (feedback.approval.toLowerCase() === "rejected") {
+                approvalClass = "approval-no";
+            }
+
+            row.innerHTML = `
+            <td><strong>${feedback.ID}</strong></td>
+            <td>${feedback.name}</td>
+            <td style="max-width: 300px;">
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${feedback.description}</p>
+            </td>
+            <td>${feedback.date}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view" title="View Details" onclick="openViewModal(${index})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </td>
+            `;
+            tableBody.appendChild(row);
+        }
+    });
 }
 
-// Enhanced date matching with explicit filter type
-function matchesDateFilterEnhanced(recordDate, filterValue, filterType) {
-    if (!filterValue || !recordDate || filterType === 'all') return true;
-    
-    const record = new Date(recordDate);
-    
-    switch(filterType) {
-        case 'year':
-            const yearValue = filterValue.includes('-') ? new Date(filterValue).getFullYear() : parseInt(filterValue);
-            return record.getFullYear() === yearValue;
-            
-        case 'month':
-            const monthDate = new Date(filterValue + '-01');
-            return record.getFullYear() === monthDate.getFullYear() && 
-                   record.getMonth() === monthDate.getMonth();
-                   
-        case 'day':
-            return recordDate === filterValue;
-            
-        default:
-            return true;
+function openViewModal(index) {
+    const patient = process[index];
+    const modal = document.getElementById("viewModal");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || "";
+    };
+
+    if (department === "D001") {
+        const afterView = document.querySelector(".form-group.after_view");
+        const treatmentView = document.querySelector(".form-group.treatment_view");
+        if (afterView) afterView.style.display = "none";
+        if (treatmentView) treatmentView.style.display = "none";
+        
+        setValue("viewPatientid", patient.ID);
+        setValue("viewdescription", patient.description);
+        setValue("viewDepartment", patient.depart);
+        setValue("viewDate", patient.date);
+    } else {
+        const departmentView = document.querySelector(".form-group.department_view");
+        const dateView = document.querySelector(".form-group.date_view");
+        if (departmentView) departmentView.style.display = "none";
+        if (dateView) dateView.style.display = "none";
+        
+        setValue("viewPatientid", patient.ID);
+        setValue("viewdescription", patient.description);
+        setValue("viewTreatment", patient.treatment);
+        setValue("viewPhone", patient.phone);
+        setValue("viewEmail", patient.treatment);
+        setValue("viewAddress", patient.address);
     }
 }
 
+function openEditModal(index) {
+    editIndex = index;
+    const patient = process[index];
+    const modal = document.getElementById("editModal");
+    if (!modal) return;
 
-    // Similar implementation for the else branch
-    let editIndex = null;
+    modal.style.display = "flex";
 
-    function populateFeedbackTable() {
-        const tableBody = document.getElementById('feedbackTable');
-        const searchInput = document.getElementById('searchName');
-        const dateInput = document.getElementById('filterDate');
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || "";
+    };
 
-        const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
-        const dateValue = dateInput ? dateInput.value : '';
+    setValue("editPatientName", patient.ID);
+    setValue("editPatientdis", patient.description);
+    setValue("edittreatment", patient.treatment);
+}
 
-        tableBody.innerHTML = '';
+function savePatient() {
+    if (editIndex !== null) {
+        const getValue = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : "";
+        };
 
-        process.forEach((feedback, index) => {
-            const matchName = feedback.name.toLowerCase().includes(searchValue);
-            const matchDate = matchesDateFilter(feedback.date, dateValue);
+        process[editIndex].ID = getValue("editPatientName");
+        process[editIndex].description = getValue("editPatientdis");
+        process[editIndex].treatment = getValue("edittreatment");
+        process[editIndex].department = getValue("editDepartment");
+        process[editIndex].date = getValue("editDate");
 
-            if (matchName && matchDate) {
-                const row = document.createElement('tr');
-                let approvalClass = "";
-                if (feedback.approval.toLowerCase() === "approved") {
-                    approvalClass = "approval-ok";
-                } else if (feedback.approval.toLowerCase() === "pending") {
-                    approvalClass = "approval-pending";
-                } else if (feedback.approval.toLowerCase() === "rejected") {
-                    approvalClass = "approval-no";
+        populateFeedbackTable();
+        closeModal("editModal");
+    }
+}
+
+// ============================================================
+// MODAL CLOSE FUNCTION
+// ============================================================
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// ============================================================
+// FILE UPLOAD HANDLER
+// ============================================================
+function handleFileUpload(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    let label = document.querySelector(`label.photo-btn[for="${inputId}"]`);
+
+    if (!label) {
+        const group = input.closest('.form-group');
+        if (group) label = group.querySelector('label');
+    }
+
+    if (!label) {
+        label = document.querySelector(`label[for="${inputId}"]`);
+    }
+
+    if (!label) return;
+
+    if (!label.getAttribute('data-default')) {
+        label.setAttribute('data-default', label.innerHTML.trim());
+    }
+
+    input.addEventListener('change', () => {
+        if (input.files && input.files.length > 0) {
+            label.classList.add('uploaded');
+
+            const fileName = input.files[0].name;
+            label.innerHTML = `<i class="fa-solid fa-camera"></i> <span class="label-text">${fileName}</span>`;
+
+            label.style.background = '#28a745';
+            label.style.color = '#fff';
+        } else {
+            label.classList.remove('uploaded');
+            label.innerHTML = label.getAttribute('data-default') || '';
+            label.style.background = '';
+            label.style.color = '';
+        }
+    });
+}
+
+// ============================================================
+// NAVIGATION & SIDEBAR FUNCTIONS
+// ============================================================
+function createRipple(element) {
+    const ripple = document.createElement('span');
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    
+    ripple.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        top: 50%;
+        left: 50%;
+        margin-top: ${-size / 2}px;
+        margin-left: ${-size / 2}px;
+        pointer-events: none;
+    `;
+    
+    element.style.position = 'relative';
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+function setupNavigation() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const patientQueue = document.getElementById('patientQueue');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+    const pageSections = document.querySelectorAll('.page-section');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+            const icon = sidebarToggle.querySelector('i');
+            
+            if (icon) {
+                if (sidebar.classList.contains('expanded')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0deg)';
                 }
-
-                row.innerHTML = `
-                <td><strong>${feedback.ID}</strong></td>
-                <td>${feedback.name}</td>
-                <td style="max-width: 300px;">
-                    <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${feedback.description}</p>
-                </td>
-                <td>${feedback.date}</td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="action-btn view" title="View Details" onclick="openViewModal(${index})">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn edit" title="Edit Feedback" onclick="openEditModal(${index})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
-                </td>
-                `;
-                tableBody.appendChild(row);
             }
         });
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('searchName');
-        const dateInput = document.getElementById('filterDate');
-        
-        if (searchInput) {
-            searchInput.addEventListener('input', populateFeedbackTable);
-        }
-        if (dateInput) {
-            dateInput.addEventListener('change', populateFeedbackTable);
-        }
-        
-        populateFeedbackTable();
-    });
-
-    function openViewModal(index) {
-        const patient = process[index];
-        const modal = document.getElementById("viewModal");
-        modal.style.display = "flex";
-
-        const departmentView = document.querySelector(".form-group.department_view");
-        const dateView = document.querySelector(".form-group.date_view");
-        
-       
-
-        const viewPatientId = document.getElementById("viewPatientid");
-        const viewDescription = document.getElementById("viewdescription");
-        const viewTreatment = document.getElementById("viewTreatment");
-        const viewPhone = document.getElementById("viewPhone");
-        const viewEmail = document.getElementById("viewEmail");
-        const viewAddress = document.getElementById("viewAddress");
-        
-        if (viewPatientId) viewPatientId.value = patient.ID;
-        if (viewDescription) viewDescription.value = patient.description || "";
-        if (viewTreatment) viewTreatment.value = patient.treatment || "";
-        if (viewPhone) viewPhone.value = patient.phone || "";
-        if (viewEmail) viewEmail.value = patient.treatment || "";
-        if (viewAddress) viewAddress.value = patient.address || "";
-    }
-
-    function openEditModal(index) {
-        editIndex = index;
-        const patient = process[index];
-        const modal = document.getElementById("editModal");
-        modal.style.display = "flex";
-
-        const editPatientName = document.getElementById("editPatientName");
-        const editPatientDis = document.getElementById("editPatientdis");
-        const editTreatment = document.getElementById("edittreatment");
-        
-        if (editPatientName) editPatientName.value = patient.ID;
-        if (editPatientDis) editPatientDis.value = patient.description || "";
-        if (editTreatment) editTreatment.value = patient.treatment || "";
-    }
-
-    function closeModal(id) {
-        const modal = document.getElementById(id);
-        if (modal) {
-            modal.style.display = "none";
-        }
-    }
-
-    window.openViewModal = openViewModal;
-    window.openEditModal = openEditModal;
-    window.closeModal = closeModal;
-
-
-
-
-
-
-
-
-
-       function handleFileUpload(inputId) {
-  const input = document.getElementById(inputId);
-  if (!input) return;
-
-  // 1) نحاول نجيب label اللي فعلاً styled كـ button أولاً
-  let label = document.querySelector(`label.photo-btn[for="${inputId}"]`);
-
-  // 2) لو مش لاقيه، ندوّر على أقرب form-group ونجيب اللابل اللي جواه
-  if (!label) {
-    const group = input.closest('.form-group');
-    if (group) label = group.querySelector('label');
-  }
-
-  // 3) أخيراً fallback لأي label عادي مربوط بنفس الـ for
-  if (!label) {
-    label = document.querySelector(`label[for="${inputId}"]`);
-  }
-
-  if (!label) return; // مافيش لابل خالص
-
-  // نخزن النص الافتراضي لو مش متخزن
-  if (!label.getAttribute('data-default')) {
-    label.setAttribute('data-default', label.innerHTML.trim());
-  }
-
-  input.addEventListener('change', () => {
-    if (input.files && input.files.length > 0) {
-      label.classList.add('uploaded');
-
-      // لو تحب تحافظ على أي أيقونات داخل الليبل، استخدم innerHTML مع أيقونة
-      const fileName = input.files[0].name;
-      label.innerHTML = `<i class="fa-solid fa-camera"></i> <span class="label-text">${fileName}</span>`;
-
-      // كـ backup لو فيه CSS عالي الأولوية، نحط inline style
-      label.style.background = '#28a745';
-      label.style.color = '#fff';
-    } else {
-      label.classList.remove('uploaded');
-      label.innerHTML = label.getAttribute('data-default') || '';
-      label.style.background = '';
-      label.style.color = '';
-    }
-  });
-}
-
-// استدعيها كده
-handleFileUpload('before-upload');
-handleFileUpload('after-upload');
-
-
-
-
-        // DOM Elements
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const patientQueue = document.getElementById('patientQueue');
-        const mainContent = document.getElementById('mainContent');
-        const patientCards = document.querySelectorAll('.patient-card');
-        const sidebarIcons = document.querySelectorAll('.sidebar-icon');
-        const pageSections = document.querySelectorAll('.page-section');
-
-        // Navigation functionality - This is the key linking mechanism
-         sidebarIcons.forEach(icon => {
-            icon.addEventListener('click', () => {
-                const targetPage = icon.dataset.page;
-                
-                // Remove active class from all icons and sections
-                sidebarIcons.forEach(i => i.classList.remove('active'));
-                pageSections.forEach(section => section.classList.remove('active'));
-                
-                // Add active class to clicked icon and corresponding section
-                icon.classList.add('active');
-                const targetSection = document.getElementById(targetPage);
-                if (targetSection) {
-                    targetSection.classList.add('active');
-                }
-                
-                // Show/hide patient queue based on current page
+    sidebarIcons.forEach(icon => {
+        icon.addEventListener('click', () => {
+            const targetPage = icon.dataset.page;
+            
+            sidebarIcons.forEach(i => i.classList.remove('active'));
+            pageSections.forEach(section => section.classList.remove('active'));
+            
+            icon.classList.add('active');
+            const targetSection = document.getElementById(targetPage);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            if (patientQueue && mainContent) {
                 if (targetPage === 'patients') {
                     patientQueue.classList.add('show');
                     mainContent.classList.add('with-patient-queue');
@@ -3371,11 +3518,11 @@ handleFileUpload('after-upload');
                     patientQueue.classList.remove('show');
                     mainContent.classList.remove('with-patient-queue');
                 }
-                
-                // Add visual feedback
-                createRipple(icon);
-                
-                // Animate section transition
+            }
+            
+            createRipple(icon);
+            
+            if (targetSection) {
                 setTimeout(() => {
                     targetSection.style.opacity = '0';
                     targetSection.style.transform = 'translateY(20px)';
@@ -3386,240 +3533,233 @@ handleFileUpload('after-upload');
                         targetSection.style.transform = 'translateY(0)';
                     }, 50);
                 }, 100);
+            }
+        });
+    });
+}
+
+// ============================================================
+// PATIENT CARD SELECTION
+// ============================================================
+function setupPatientCardSelection() {
+    const patientCards = document.querySelectorAll('.patient-card');
+
+    patientCards.forEach(card => {
+        card.addEventListener('click', () => {
+            patientCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            const patientId = card.dataset.patient;
+            const patient = student_patient[patientId];
+            
+            if (patient) {
+                updatePatientDetailsForStudents(patient);
+            }
+            
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 150);
+        });
+    });
+}
+
+function updatePatientDetailsForStudents(patient) {
+    const headerAvatar = document.querySelector('#patients .patient-header-avatar');
+    const headerName = document.querySelector('#patients .patient-header-info h1');
+    const memberBadge = document.querySelector('#patients .member-badge');
+    
+    if (headerAvatar) headerAvatar.textContent = patient.avatar;
+    if (headerName) headerName.textContent = patient.name;
+    if (memberBadge) memberBadge.textContent = patient.badge;
+    
+    const formValues = document.querySelectorAll('#patients .form-value');
+    if (formValues.length >= 5) {
+        formValues[0].textContent = patient.info.gender;
+        formValues[1].textContent = patient.info.dob;
+        formValues[2].textContent = patient.info.phone;
+        formValues[3].textContent = patient.info.email;
+        formValues[4].textContent = patient.info.address;
+    }
+    
+    const policyDiv = document.querySelector('#patients [style*="font-weight: 600"]');
+    if (policyDiv) policyDiv.textContent = `Policy #: ${patient.insurance.policy}`;
+}
+
+// ============================================================
+// SEARCH FUNCTIONALITY
+// ============================================================
+function setupSearchFunctionality() {
+    const searchName = document.getElementById('searchName');
+    
+    if (searchName) {
+        searchName.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#StudentApproval tr');
+            
+            rows.forEach(row => {
+                const nameCell = row.cells[1];
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(searchTerm) ? '' : 'none';
+                }
             });
         });
-        // patients table
-        
-
-// حفظ البيانات بعد التعديل
-function savePatient() {
-    if (editIndex !== null) {
-        process[editIndex].ID = document.getElementById("editPatientName").value;
-        process[editIndex].description = document.getElementById("editPatientdis").value;
-        process[editIndex].treatment = document.getElementById("edittreatment").value;
-        process[editIndex].department = document.getElementById("editDepartment").value;
-        process[editIndex].date = document.getElementById("editDate").value;
-        
-        // الصور لازم تتعامل معاها برفع جديد (input file) زي ما قلتلك قبل كده
-        // مينفعش تحط قيمة مباشرة في input type="file"
-
-        populateFeedbackTable(); // يعيد رسم الجدول
-        closeModal("editModal");
     }
 }
 
+// ============================================================
+// BUTTON INTERACTIONS
+// ============================================================
+function setupButtonInteractions() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.action-btn')) {
+            const btn = e.target.closest('.action-btn');
+            createRipple(btn);
+            
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 150);
+        }
+    });
 
-// لما تدوس برا المودال يتقفل
-window.onclick = function(event) {
-    if (event.target.classList.contains("modal")) {
-        event.target.style.display = "none";
+    window.onclick = function(event) {
+        if (event.target.classList.contains("modal")) {
+            event.target.style.display = "none";
+        }
+    };
+}
+
+// ============================================================
+// MOBILE RESPONSIVENESS
+// ============================================================
+function handleResize() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('expanded');
     }
+}
+
+// ============================================================
+// PAGE INITIALIZATION ANIMATION
+// ============================================================
+function initializePageAnimation() {
+    const activeSection = document.querySelector('.page-section.active');
+    if (activeSection) {
+        activeSection.style.opacity = '0';
+        activeSection.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            activeSection.style.transition = 'all 0.6s ease';
+            activeSection.style.opacity = '1';
+            activeSection.style.transform = 'translateY(0)';
+        }, 100);
+    }
+}
+
+// ============================================================
+// ADD RIPPLE ANIMATION KEYFRAMES
+// ============================================================
+function addRippleStyles() {
+    const rippleStyle = document.createElement('style');
+    rippleStyle.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(rippleStyle);
+}
+
+// ============================================================
+// FORM SUBMISSION HANDLER
+// ============================================================
+function setupFormSubmission() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            savePatientData();
+        });
+    }
+}
+
+// ============================================================
+// PATIENT MANAGEMENT EXPORT
+// ============================================================
+window.PatientManagement = {
+    init: initializePatientManagement,
+    loadPatient: loadPatientDetails,
+    searchPatients: searchPatients,
+    addPatient: addNewPatient,
+    saveData: savePatientData,
+    getCurrentData: getCurrentPatientData,
+    clearForm: clearForm,
+    getCases: () => Cases
 };
 
-// تشغيل الجدول أول مرة
-populateFeedbackTable();
+// ============================================================
+// MAIN INITIALIZATION - CONSOLIDATED DOMContentLoaded
+// ============================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("🚀 Starting initialization...");
 
+    // 1. Load Doctor Data
+    if (doctorID) {
+        await set_doctor_data(doctorID);
+        await load_doctor_student_cases(doctorID);
+        console.log("✅ Doctor data loaded. Department:", department);
+    } else {
+        alert("لم يتم تحديد الطبيب في الرابط!");
+        console.warn("⚠️ No doctor ID found in URL");
+    }
 
+    // 2. Initialize UI Components
+    setupImageModals();
+    setupNavigation();
+    setupPatientCardSelection();
+    setupSearchFunctionality();
+    setupButtonInteractions();
+    setupFormSubmission();
+    addRippleStyles();
 
-        // Sidebar functionality
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('expanded');
-            const icon = sidebarToggle.querySelector('i');
-            
-            if (sidebar.classList.contains('expanded')) {
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                icon.style.transform = 'rotate(0deg)';
-            }
-        });
+    // 3. Initialize Tables
+    populateStudentsTable();
+    populateFeedbackTable();
 
+    // 4. Setup Event Listeners
+    const searchInput = document.getElementById('searchName');
+    const dateInput = document.getElementById('filterDate');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', populateFeedbackTable);
+    }
+    if (dateInput) {
+        dateInput.addEventListener('change', populateFeedbackTable);
+    }
 
+    // 5. File Upload Handlers
+    handleFileUpload('before-upload');
+    handleFileUpload('after-upload');
 
+    // 6. Patient Card Click Events - REMOVED (now handled in renderQueue)
+    // Cards are now created with click events attached directly
 
+    // 7. Initialize Patient Management
+    initializePatientManagement();
 
+    // 8. Mobile Responsiveness
+    window.addEventListener('resize', handleResize);
+    handleResize();
 
+    // 9. Page Animation
+    initializePageAnimation();
 
-
-
-
-
-
-
-
-
-
-        
-const student_patient = {
-            'sarah-johnson': {
-                avatar: 'SJ',
-                name: 'Sarah Johnson',
-                badge: 'Premium Member',
-                info: {
-                    gender: 'Female',
-                    dob: 'March 15, 1985',
-                    phone: '(555) 123-4567',
-                    email: 'sarah.johnson@email.com',
-                    address: '123 Main Street, New York, NY 10001',
-                    emergency: 'John Johnson - (555) 987-6543'
-                },
-                insurance: {
-                    policy: 'HC-2024-789456',
-                    expires: 'December 31, 2024',
-                    provider: 'HealthCare Plus',
-                    status: 'Active Coverage'
-                }
-            },
-            'mike-chen': {
-                avatar: 'MC',
-                name: 'Mike Chen',
-                badge: 'Standard Member',
-                info: {
-                    gender: 'Male',
-                    dob: 'July 22, 1990',
-                    phone: '(555) 234-5678',
-                    email: 'mike.chen@email.com',
-                    address: '456 Oak Avenue, Los Angeles, CA 90210',
-                    emergency: 'Lisa Chen - (555) 876-5432'
-                },
-                insurance: {
-                    policy: 'HC-2024-234567',
-                    expires: 'June 30, 2024',
-                    provider: 'MediCare Pro',
-                    status: 'Active Coverage'
-                }
-            },
-            
-        };
-
-        // Patient selection functionality
-        patientCards.forEach(card => {
-            card.addEventListener('click', () => {
-                // Remove active class from all cards
-                patientCards.forEach(c => c.classList.remove('active'));
-                // Add active class to clicked card
-                card.classList.add('active');
-                
-                // Get patient data
-                const patientId = card.dataset.patient;
-                const patient = student_patient[patientId];
-                
-                if (patient) {
-                    updatePatientDetails(patient);
-                }
-                
-                // Add selection animation
-                card.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    card.style.transform = '';
-                }, 150);
-            });
-        });
-
-        // Update patient details function
-        function updatePatientDetails(patient) {
-            // Update header (only in patients section)
-            const headerAvatar = document.querySelector('#patients .patient-header-avatar');
-            const headerName = document.querySelector('#patients .patient-header-info h1');
-            const memberBadge = document.querySelector('#patients .member-badge');
-            
-            if (headerAvatar) headerAvatar.textContent = patient.avatar;
-            if (headerName) headerName.textContent = patient.name;
-            if (memberBadge) memberBadge.textContent = patient.badge;
-            
-            // Update basic information
-            const formValues = document.querySelectorAll('#patients .form-value');
-            if (formValues.length >= 5) {
-                formValues[0].textContent = patient.info.gender;
-                formValues[1].textContent = patient.info.dob;
-                formValues[2].textContent = patient.info.phone;
-                formValues[3].textContent = patient.info.email;
-                formValues[4].textContent = patient.info.address;
-            }
-            
-            // Update insurance information
-            const policyDiv = document.querySelector('#patients [style*="font-weight: 600"]');
-            if (policyDiv) policyDiv.textContent = `Policy #: ${patient.insurance.policy}`;
-        }
-
-        // Ripple effect function
-        function createRipple(element) {
-            const ripple = document.createElement('span');
-            const rect = element.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            
-            ripple.style.cssText = `
-                width: ${size}px;
-                height: ${size}px;
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.3);
-                transform: scale(0);
-                animation: ripple 0.6s linear;
-                top: 50%;
-                left: 50%;
-                margin-top: ${-size / 2}px;
-                margin-left: ${-size / 2}px;
-                pointer-events: none;
-            `;
-            
-            element.style.position = 'relative';
-            element.appendChild(ripple);
-            
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-        }
-
-        // Add ripple animation keyframes
-        const rippleStyle = document.createElement('style');
-        rippleStyle.textContent = `
-            @keyframes ripple {
-                to {
-                    transform: scale(4);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(rippleStyle);
-
-        // Button interactions
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.action-btn')) {
-                const btn = e.target.closest('.action-btn');
-                createRipple(btn);
-                
-                btn.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    btn.style.transform = '';
-                }, 150);
-            }
-        });
-        populateFeedbackTable();
-
-        // Initialize page with animation
-        window.addEventListener('load', () => {
-            const activeSection = document.querySelector('.page-section.active');
-            if (activeSection) {
-                activeSection.style.opacity = '0';
-                activeSection.style.transform = 'translateY(30px)';
-                
-                setTimeout(() => {
-                    activeSection.style.transition = 'all 0.6s ease';
-                    activeSection.style.opacity = '1';
-                    activeSection.style.transform = 'translateY(0)';
-                }, 100);
-            }
-        });
-
-        // Mobile responsiveness
-        function handleResize() {
-            if (window.innerWidth <= 768) {
-                sidebar.classList.remove('expanded');
-            }
-        }
-
-        window.addEventListener('resize', handleResize);
-        handleResize();
+    console.log("✅ All systems initialized successfully!");
+});
     </script>
 </body>
 </html>

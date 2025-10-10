@@ -614,7 +614,7 @@
 
     if (result.success) {
         alert("Login successful ");
-        window.location.href = "/doctor";  // مثلًا يحوله لصفحة تانية
+        window.location.href = "/doctor?doctor_id=" + result.ID;  // مثلًا يحوله لصفحة تانية
     } else {
         alert("Login failed: " + result.message);
     }

@@ -1,12 +1,20 @@
 from fastapi import FastAPI, Request,Form, File, UploadFile
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse, HTMLResponse
 from pydantic import BaseModel
 from fastapi.templating import Jinja2Templates
 import uvicorn
 import sqlite3
 from queries import *
+from PIL import Image
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+import os
+import io
+import uuid
+from Student_Page_Queries import *
+from doctor_query import *
+
 
 app = FastAPI()
 
@@ -18,14 +26,29 @@ def read_root(request: Request):
     return templates.TemplateResponse("home.html", {"request": request})
 
 
+def get_departments():
+    conn = sqlite3.connect("dental_project_DB.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM department where department_id != 'D001';")
+    departments = [row[0] for row in cursor.fetchall()]
+    conn.close()
+    return departments
+
+
 @app.get("/student", response_class=HTMLResponse)
 def student(request: Request):
+    departments = get_departments()
+    return templates.TemplateResponse(
+        "student.html", {"request": request, "departments": departments}
+    )
 
-    return templates.TemplateResponse("student.html", {"request": request})
 
 @app.get("/doctor", response_class=HTMLResponse)
 def doctor(request: Request):
-    return templates.TemplateResponse("doctor_all.html", {"request": request})
+    departments = get_departments()
+    return templates.TemplateResponse(
+        "doctor_all.html", {"request": request, "departments": departments}
+    )
 
 @app.get("/college", response_class=HTMLResponse)
 def collge(request: Request):
@@ -131,7 +154,8 @@ def api_login_doctor(data: LoginDoctorModel):
         if result:  
             return {
                 "success": True,
-                "message": "Login successful"
+                "message": "Login successful",
+                "ID" : result[0]
             }
         else:
             return {"success": False, "message": "Invalid credentials"}
@@ -228,6 +252,7 @@ def get_cases_data_regestration(data: GetCaseData):
    
 
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 # get Student basic info
@@ -323,31 +348,48 @@ def get_patients_all():
     return {"patients": patients}
 
 
-
 @app.get("/api/student/cases/table/{student_id}")
-def get_student_cases_table(student_id : str):
+def get_student_cases_table(student_id: str):
     try:
         conn = sqlite3.connect("dental_project_DB.db")
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute("""select s.case_id , c.name , s.description, s.treatment, s.before_photo, 
-                            s.after_photo, s.department_id, s.appointment_date, s.checked 
-                            from student_department_cases s
-                            join cases c
-                            on c.case_id = s.case_id
-                            where student_id = ?
-                            order by s.case_id DESC;
-                            """, (student_id,))
-        
+
+        cursor.execute("""
+            SELECT s.case_id, c.name, s.description, s.treatment, s.before_photo,
+                   s.after_photo, s.department_id, s.appointment_date, s.checked,
+                   s.department_reffere, s.notes
+            FROM student_department_cases s
+            JOIN cases c ON c.case_id = s.case_id
+            WHERE student_id = ?
+            ORDER BY s.case_id DESC;
+        """, (student_id,))
+
         rows = cursor.fetchall()
         conn.close()
 
-        table = [dict(row) for row in rows]
-        return {"success": True, "table" : table}
+        table = []
+        for row in rows:
+            data = {
+                "case_id": row["case_id"],
+                "name": row["name"] or "",
+                "description": row["description"] or "",
+                "treatment": row["treatment"] or "",
+                "before_photo": row["before_photo"] or "",
+                "after_photo": row["after_photo"] or "",
+                "department_id": row["department_id"],
+                "appointment_date": row["appointment_date"] or "",
+                "checked": row["checked"],
+                "department_reffere": row["department_reffere"] or "",
+                "notes": row["notes"] or ""  # 👈 هنا التحويل الصريح
+            }
+            table.append(data)
+
+        print(table)
+        return {"success": True, "table": table}
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         return {"success": False, "message": "Server error, please try again"}
-
 
 
 class PostPatientToPatient(BaseModel):
@@ -368,93 +410,233 @@ def post_patient_to_patient(data: PostPatientToPatient):
         }
 
 
+UPLOAD_FOLDER = os.path.join("static", "uploads")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 @app.post("/api/v1/edit/case")
 async def edit_case(
-    student_id: str = Form(...),
-    case_id: str = Form(...),
-    description: str = Form(...),
-    treatment: str = Form(...),
-    department: str = Form(...),
-    date: str = Form(...),
-    before: UploadFile = File(...),
-    after: UploadFile = File(...)
-):
-    print("Student:", student_id)
-    print("Case:", case_id)
-    print("Desc:", description)
-    print("Dept:", department)
-    print("Date:", date)
-    print("Before file:", before.filename if before else "No file")
-    print("After file:", after.filename if after else "No file")
+    
+        student_id: str = Form(None),
+        case_id: str = Form(None),
+        department_id: str = Form(None),
+        description: str = Form(None),
+        treatment: str = Form(None),
+        department: str = Form(None),
+        date: str = Form(None),
+        before: UploadFile = File(None),
+        after: UploadFile = File(None)
+        ):
+    try :
+        print("="*50)
+        print("Student ID:", student_id)
+        print("Case ID:", case_id)
+        print("department ID:", department_id)
+        print("Description:", description)
+        print("Treatment:", treatment)
+        print("Department:", department)
+        print("Date:", date)
 
-    return {
-        "success": True,
-        "message": "Data Added successful"
-    }
+        if before:
+            ext = os.path.splitext(before.filename)[1]  # الامتداد
+            filename_before = f"{uuid.uuid4()}{ext}"         # اسم فريد
+            filepath_before = os.path.join(UPLOAD_FOLDER, filename_before)
+
+            with open(filepath_before, 'wb') as f:
+                f.write(await before.read())
+            
+            print("before path :", filepath_before)
+        else:
+            print("Before file: No file")
+
+        if after:
+            ext = os.path.splitext(after.filename)[1]  # الامتداد
+            filename_after = f"{uuid.uuid4()}{ext}"         # اسم فريد
+            filepath_after = os.path.join(UPLOAD_FOLDER, filename_after)
+
+            with open(filepath_after, 'wb') as f:
+                f.write(await after.read())
+            
+            print("after path :", filepath_after)
+        else:
+            filename_after = "unkown"
+            print("After file: No file")
+
+        if department_id == 'D001':
+            update_edit_case(description, treatment, filename_before, filename_after, department, date, student_id, case_id, department_id)
+        else:
+            update_edit_case_all(description, treatment, filename_after, student_id, case_id, department_id)
+        print("="*50)
+        
+
+        return {"success": True, "message": "Data received"}
+    except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return {"success": False, "message": "Server error, please try again"} 
 
 
-model_path = "yasserrmd/SciReason-LFM2-2.6B"  
 
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    torch_dtype=torch.float16,
-    device_map="auto"
-)
-model.eval()
 
-class AiDiagnosis(BaseModel):
-    age: int
-    sick: str
 
-def build_prompt(age, sick):
-    return f"""
-You are an experienced dental doctor.
-A patient is {age} years old and reports the following issue: "{sick}".
-Please provide:
-1. The most likely dental diagnosis.
-2. Possible related conditions.
-3. Brief explanation.
-4. Suggested examinations or next steps.
-"""
 
-@app.post("/api/ai/diagnosis")
-def Ai_diagnosis(data: AiDiagnosis):
-    print("Age:", data.age, "Sick:", data.sick)
+# model_path = "SciReason-LFM2-2.6B/"  
 
-    messages = [
-        {"role": "user", "content": build_prompt(data.age, data.sick)}
-    ]
+# tokenizer = AutoTokenizer.from_pretrained(model_path)
+# model = AutoModelForCausalLM.from_pretrained(
+#     model_path,
+#     torch_dtype=torch.float16,
+#     device_map="auto"
+# )
+# model.eval()
 
-    inputs = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        tokenize=True,
-        return_dict=True,
-        return_tensors="pt"
-    ).to(model.device)
+# class AiDiagnosis(BaseModel):
+#     age: int
+#     sick: str
 
-    with torch.inference_mode():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=800,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9
-        )
+# def build_prompt(age, sick):
+#     return f"""
+# You are an experienced dental doctor.
+# A patient is {age} years old and reports the following issue: "{sick}".
+# Please provide:
+# 1. The most likely dental diagnosis.
+# 2. Possible related conditions.
+# 3. Brief explanation.
+# 4. Suggested examinations or next steps.
+# """
 
-    response_text = tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[-1]:],
-        skip_special_tokens=True
-    )
+# @app.post("/api/ai/diagnosis")
+# def Ai_diagnosis(data: AiDiagnosis):
+#     print("Age:", data.age, "Sick:", data.sick)
 
-    print("AI Response:", response_text)
+#     messages = [
+#         {"role": "user", "content": build_prompt(data.age, data.sick)}
+#     ]
 
-    return {
-        "AI_response": response_text,
-        "success": True,
-        "message": "Data Added successful"
-    }
+#     inputs = tokenizer.apply_chat_template(
+#         messages,
+#         add_generation_prompt=True,
+#         tokenize=True,
+#         return_dict=True,
+#         return_tensors="pt"
+#     ).to(model.device)
+
+#     with torch.inference_mode():
+#         outputs = model.generate(
+#             **inputs,
+#             max_new_tokens=800,
+#             do_sample=True,
+#             temperature=0.7,
+#             top_p=0.9
+#         )
+
+#     response_text = tokenizer.decode(
+#         outputs[0][inputs["input_ids"].shape[-1]:],
+#         skip_special_tokens=True
+#     )
+
+#     print("AI Response:", response_text)
+
+#     return {
+#         "AI_response": response_text,
+#         "success": True,
+#         "message": "Data Added successful"
+#     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################################################################
+
+################# Doctor page #####################
+
+@app.get("/api/v1/doctor/data/{doctorID}")
+def get_doctor_data_api(doctorID : str):
+    try:
+
+        data = get_doctor_data(doctorID)
+
+        return {"success": True, "data": data}
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return {"success": False, "message": "Server error, please try again"}
+    
+
+
+@app.get("/api/v1/doctor/student/cases/{doctorID}")
+def get_doctor_data_api(doctorID : str):
+    try:
+
+        data = get_doctor_student_cases(doctorID)
+
+        return {"success": True, "data": data}
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return {"success": False, "message": "Server error, please try again"}
+
+
+
+
+@app.post("/api/v1/approve/case")
+async def edit_case(
+    
+        case_id: str = Form(None),
+        department_id: str = Form(None),
+        description: str = Form(None),
+        treatment: str = Form(None),
+        department: str = Form(None),
+        approval: str = Form(None),
+        notes: str = Form(None),
+      
+        ):
+    try :
+        print("="*50)
+        print("Case ID:", case_id)
+        print("department ID:", department_id)
+        print("Description:", description)
+        print("Treatment:", treatment)
+        print("Department:", department)
+        print("approval:", approval)
+        print("notes:", notes)
+
+       
+        print("="*50)
+        update_doctor_student_case(description, treatment, department, approval,  notes, case_id, department_id)
+
+        return {"success": True, "message": "Data received"}
+    except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return {"success": False, "message": "Server error, please try again"} 
+
+
+
+
+
+
+
+
+
+
+
 
 
 

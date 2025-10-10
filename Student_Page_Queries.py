@@ -105,3 +105,57 @@ def get_patient_basic_info(case_id : int):
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         return {"success": False, "message": "Server error, please try again"}
+    
+
+def update_edit_case(description, treatment, before_photo, after_photo, department_reffere , appointment_date, student_id, case_id, department_id):
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       update student_department_cases
+                        set description = ?, treatment = ?, before_photo = ?, after_photo = ?, department_reffere = ?, 
+                       appointment_date = ?, appointment_time = null
+                        where student_id = ? and case_id = ? and department_id = ?;
+                       """, (description, treatment, before_photo, after_photo, department_reffere , appointment_date, student_id, case_id, department_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except sqlite3.Error as e:
+        print(f"DataBase error : {e}")
+        return {"success": False, "message": "Server error, please try again"}
+    
+def update_edit_case_all(description, treatment, after_photo, student_id, case_id, department_id):
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       update student_department_cases
+                        set description = ?, treatment = ?, after_photo = ?
+                        where student_id = ? and case_id = ? and department_id = ?;
+                       """, (description, treatment, after_photo, student_id, case_id, department_id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except sqlite3.Error as e:
+        print(f"DataBase error : {e}")
+        return {"success": False, "message": "Server error, please try again"}
+    
+
+# def show_student_cases():
+#     try:
+#         conn = sqlite3.connect("dental_project_DB.db")
+#         conn.row_factory = sqlite3.Row
+
+#         cursor = conn.cursor()
+
+#         cursor.execute("""
+#                         select 
+
+# """)
+        
+
+#     except sqlite3.Error as e:
+#         print(f"DataBase error : {e}")
+#         return {"success": False, "message": "Server error, please try again"}

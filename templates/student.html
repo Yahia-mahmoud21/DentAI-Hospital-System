@@ -1624,7 +1624,7 @@
 
       <div class="form-group">
         <label class="form-label" for="before-upload">Before Photo</label>
-        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="previewImg">
+        <img src="" class="img" id="previewImg">
         </div>
 
         <!-- مودال الصورة -->
@@ -1640,7 +1640,7 @@
 
       <div class="form-group after_view">
         <label class="form-label" for="after-upload">after Photo</label>
-        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="previewImgAfter">
+        <img src="" class="img" id="previewImgAfter">
         </div>
 
       <div class="form-group treatment_view">
@@ -1657,6 +1657,29 @@
         <label class="form-label">date</label>
         <input type="date" class="form-input" id="viewDate" readonly>
       </div>
+
+      
+    </form>
+  </div>
+</div>
+
+
+<div id="notesModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">View Doctor Notes</h4>
+      <button class="close-btn" onclick="closeModal('notesModal')">&times;</button>
+    </div>
+
+    <form>
+      
+
+      <div class="form-group">
+        <label class="form-label">Doctor Notes</label>
+        <textarea type="text" class="d-input" id="ViewNotes" readonly ></textarea>
+      </div>
+
+     
 
       
     </form>
@@ -1704,16 +1727,14 @@
       </div>
 
      <div class="form-group dep">
-        <label class="form-label">Department</label>
-        <select class="form-select" id="editDepartment">
-            <option value="">-- Select Department --</option>
-            <option value="diagnosis">Diagnosis</option>
-            <option value="surgery">Surgery</option>
-            <option value="pediatrics">Pediatrics</option>
-            <option value="cardiology">Cardiology</option>
-            <option value="orthopedics">Orthopedics</option>
-        </select>
-    </div>
+    <label class="form-label">Department</label>
+    <select class="form-select" id="editDepartment">
+        {% for dep in departments %}
+            <option value="{{ dep }}">{{ dep }}</option>
+        {% endfor %}
+    </select>
+</div>
+
 
         <div class="form-group calendar">
         <label class="form-label"> Date</label>
@@ -2549,15 +2570,17 @@ async function init() {
 
         if (result.success) {
             currentProcess = result.table.map(item => ({
-                ID: item.case_id,
-                name: item.name,
-                description: item.description,
-                treatment: item.treatment,
-                before: item.before_photo,
-                after: item.after_photo,
+                 ID: item.case_id,
+                name: item.name || "",
+                description: item.description || "",
+                treatment: item.treatment || "",
+                before: item.before_photo || "",
+                after: item.after_photo || "",
                 depart: item.department_id,
-                date: item.appointment_date,
-                approval: item.checked,   // هنا لازم يكون int (مثلاً -1, 0, 1)
+                date: item.appointment_date || "",
+                approval: item.checked,
+                department_reffere: item.department_reffere || "",
+                notes: item.notes || ""  
             }));
 
             console.log("Cases loaded:", currentProcess);
@@ -2581,46 +2604,95 @@ async function init() {
 
 // اربط الفانكشن بالزرار
 }
+
+
 async function postEditCase(event) {
     event.preventDefault();
+    
     try {
-        const studetnt_case_id = document.getElementById("case_id").innerText;
+        // ❶ جمع البيانات من الـ HTML
+        const student_case_id = document.getElementById("studentIDHead").innerText;
         const case_id = document.getElementById("editPatientName").value;
+        const department_id = document.getElementById("studentdepartmentHead").innerText
         const description = document.getElementById("editPatientdis").value;
         const treatment = document.getElementById("edittreatment").value;
         const department = document.getElementById("editDepartment").value;
         const date = document.getElementById("editDate").value;
 
+        // ❷ التحقق من البيانات قبل الإرسال
+        console.log("=== Debug: Form Data ===");
+        console.log("Student Case ID:", student_case_id);
+        console.log("Case ID:", case_id);
+        console.log("Description:", description);
+        console.log("Treatment:", treatment);
+        console.log("Department:", department);
+        console.log("Date:", date);
+
+        
+
+        // ❹ جمع الملفات
         const before = document.getElementById("before-upload").files[0];
         const after = document.getElementById("after-upload").files[0];
 
+        console.log("Before file:", before ? before.name : "No file");
+        console.log("After file:", after ? after.name : "No file");
+
+        // ❺ إنشاء FormData
         const formData = new FormData();
-        formData.append("student_id", studetnt_case_id);
+        formData.append("student_id", student_case_id);
         formData.append("case_id", case_id);
+        formData.append("department_id", department_id);
         formData.append("description", description);
         formData.append("treatment", treatment);
         formData.append("department", department);
         formData.append("date", date);
-        if (before) formData.append("before", before);
-        if (after) formData.append("after", after);
+        
+        // إضافة الملفات فقط إذا كانت موجودة
+        if (before) {
+            formData.append("before", before);
+        }
+        if (after) {
+            formData.append("after", after);
+        }
 
+        // ❻ طباعة محتويات FormData للتأكد
+        console.log("=== FormData Contents ===");
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, ":", value.name, `(${value.size} bytes)`);
+            } else {
+                console.log(key, ":", value);
+            }
+        }
+        console.log("========================");
+
+        // ❼ إرسال الطلب
+        console.log("Sending request...");
         const response = await fetch("http://127.0.0.1:8000/api/v1/edit/case", {
             method: "POST",
             body: formData
+            // ⚠️ لا تضع headers يدوياً - المتصفح يضعها تلقائياً مع FormData
         });
 
+        console.log("Response status:", response.status);
+
+        // ❽ معالجة الرد
         const result = await response.json();
-        if (result.success) {
-            alert("Added successfully!");
+        console.log("Response data:", result);
+
+        if (response.ok && result.success) {
+            alert("Case updated successfully!");
+            // يمكنك إضافة كود هنا لإعادة تحميل الصفحة أو إغلاق النموذج
+            // location.reload(); // مثال
         } else {
-            alert("Failed: " + result.message);
+            alert("Failed: " + (result.message || "Unknown error"));
         }
+
     } catch (error) {
-        console.error("Error:", error);
-        alert("Something went wrong!");
+        console.error("❌ Error:", error);
+        alert("Something went wrong! Check console for details.");
     }
 }
-
 
 
     
@@ -2632,17 +2704,24 @@ async function loadStudentCases(studentId) {
         const result = await response.json();
 
         if (result.success) {
-            currentProcess = result.table.map(item => ({
+           currentProcess = result.table.map(item => {
+            console.log("Item:", item);
+            return {
                 ID: item.case_id,
-                name: item.name,
-                description: item.description,
-                treatment: item.treatment,
-                before: item.before_photo,
-                after: item.after_photo,
+                name: item.name || "",
+                description: item.description || "",
+                treatment: item.treatment || "",
+                before: item.before_photo || "",
+                after: item.after_photo || "",
                 depart: item.department_id,
-                date: item.appointment_date,
-                approval: item.checked   // هنا لازم يكون int (مثلاً -1, 0, 1)
-            }));
+                date: item.appointment_date || "",
+                approval: item.checked,
+                department_reffere: item.department_reffere || "",
+                notes: item.notes || ""  
+            };
+        });
+
+
 
             console.log("Cases loaded:", currentProcess);
             populateFeedbackTable(); // أو أي فانكشن بتعرض الداتا
@@ -2665,23 +2744,54 @@ function openViewModal(index) {
     modal.style.display = "flex";
 
     if (department === "D001") {
+
+        
+
+
+
+
         document.querySelector(".form-group.after_view").style.display = "none";
         document.querySelector(".form-group.treatment_view").style.display = "none";
         
         document.getElementById("viewPatientid").value = patient.ID;
         document.getElementById("viewdescription").value = patient.description || "Unknown";
-        document.getElementById("viewDepartment").value = patient.depart || "";
+        document.getElementById("previewImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("viewDepartment").value = patient.department_reffere || "";
         document.getElementById("viewDate").value = patient.date || "";
+
+
     } else {
         document.querySelector(".form-group.department_view").style.display = "none";
         document.querySelector(".form-group.date_view").style.display = "none";
-        
+        document.getElementById("previewImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("previewImgAfter").src = `/static/uploads/${patient.after}`;
         document.getElementById("viewPatientid").value = patient.ID;
         document.getElementById("viewdescription").value = patient.description || "";
         document.getElementById("viewTreatment").value = patient.treatment || "";
         document.getElementById("viewPhone").value = patient.phone || "";
         document.getElementById("viewEmail").value = patient.treatment || "";
         document.getElementById("viewAddress").value = patient.address || "";
+    }
+}
+function openNotesModal(index) {
+    const patient = currentProcess[index];
+    console.log("Opening notes for:", patient); // 👈
+    console.log("Notes value:", patient.notes); // 👈
+    const modal = document.getElementById("notesModal");
+    modal.style.display = "flex";
+
+    if (department === "D001") {
+
+
+        
+        
+        document.getElementById("ViewNotes").value = patient.notes || "";
+      
+
+
+    } else {
+      
+        document.getElementById("ViewNotes").value = patient.notes || "";
     }
 }
 
@@ -2744,6 +2854,9 @@ function populateFeedbackTable() {
         <td class="${approvalClass}">${approvalText}</td>
         <td>
             <div class="action-buttons">
+                <button class="action-btn view" title="View Details" onclick="openNotesModal(${index})">
+                    <i class="fa-solid fa-comment"></i>
+                </button>
                 <button class="action-btn view" title="View Details" onclick="openViewModal(${index})">
                     <i class="fas fa-eye"></i>
                 </button>
