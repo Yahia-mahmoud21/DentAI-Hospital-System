@@ -19,13 +19,11 @@ where f.faculty_members_id = ?;
         if row:
             data = dict(row)
             
-            print(data)
         cursor.execute("""
-SELECT f.name as 'manager'
-from faculty_members f
-join faculty_managers m
-on f.faculty_members_id = m.faculty_members_id
-where f.department_id = ?;
+SELECT f.name as 'manager' from department d
+join faculty_members f
+on d.manager = f.faculty_members_id
+where d.department_id = ?;
 """, ((data['department_id'],)))
         row = cursor.fetchone()
 

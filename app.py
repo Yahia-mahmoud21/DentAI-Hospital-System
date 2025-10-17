@@ -9,12 +9,14 @@ from queries import *
 from PIL import Image
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
+import torchvision.transforms as transforms
+from model import RegularizedDentalClassifier
 import os
 import io
 import uuid
 from Student_Page_Queries import *
 from doctor_query import *
-
+from college_queries import *
 
 app = FastAPI()
 
@@ -100,12 +102,11 @@ def login_patient(request: Request):
 
 
 
-
 # login for student
 class LoginStudentModel(BaseModel):
     email: str
     password: str
-
+    
 @app.post("/api/v1/student/login")
 def api_login_student(data: LoginStudentModel):
     try:
@@ -129,8 +130,51 @@ def api_login_student(data: LoginStudentModel):
     except sqlite3.Error as e:
         print(f"Database error: {e}")
         return {"success": False, "message": "Server error, please try again"}
+    
 
+class RegisterStudentModel(BaseModel):
+    id : str
+    email: str
+    password : str
 
+@app.post("/api/v1/student/register")
+def api_register_student(data: RegisterStudentModel):
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+        st_email = data.email
+        st_password = data.password
+        st_id = data.id
+        
+        # Check if student exists and email is not already registered
+        cursor.execute("SELECT student_id FROM student WHERE student_id = ? AND (email IS NULL OR email = '')", (st_id,))
+        student = cursor.fetchone()
+        
+        if not student:
+            conn.close()
+            return {
+                "success": False,
+                "message": "Student ID not found or already registered. Please contact the administration"
+            }
+        
+        # Update student with email and password
+        cursor.execute("UPDATE student SET email = ?, password = ? WHERE student_id = ?", (st_email, st_password, st_id))
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": "Account created successfully",
+            "student_id": st_id
+        }
+        
+    except Exception as e:
+        if 'conn' in locals():
+            conn.close()
+        return {
+            "success": False,
+            "message": f"Error creating account: {str(e)}"
+        }
 
 
 
@@ -479,72 +523,125 @@ async def edit_case(
 
 
 
-# model_path = "SciReason-LFM2-2.6B/"  
+model_path = "SciReason-LFM2-2.6B"
 
-# tokenizer = AutoTokenizer.from_pretrained(model_path)
-# model = AutoModelForCausalLM.from_pretrained(
-#     model_path,
-#     torch_dtype=torch.float16,
-#     device_map="auto"
-# )
-# model.eval()
+tokenizer = AutoTokenizer.from_pretrained(model_path)
+model = AutoModelForCausalLM.from_pretrained(
+    model_path,
+    torch_dtype=torch.float16,   # دقة نصفية لتقليل استهلاك VRAM
+    device_map="auto",           # يوزع الموديل تلقائيًا على الـ GPU
+    low_cpu_mem_usage=True
+)
+model.eval()
 
-# class AiDiagnosis(BaseModel):
-#     age: int
-#     sick: str
+class AiDiagnosis(BaseModel):
+    age: int
+    sick: str
 
-# def build_prompt(age, sick):
-#     return f"""
-# You are an experienced dental doctor.
-# A patient is {age} years old and reports the following issue: "{sick}".
-# Please provide:
-# 1. The most likely dental diagnosis.
-# 2. Possible related conditions.
-# 3. Brief explanation.
-# 4. Suggested examinations or next steps.
-# """
+def build_prompt(age, sick):
+    return f"""
+You are an experienced dental doctor.
+A patient is {age} years old and reports the following issue: "{sick}".
+Please provide:
+1. The most likely dental diagnosis.
+2. Possible related conditions.
+3. Brief explanation.
+4. Suggested examinations or next steps.
+"""
 
-# @app.post("/api/ai/diagnosis")
-# def Ai_diagnosis(data: AiDiagnosis):
-#     print("Age:", data.age, "Sick:", data.sick)
+@app.post("/api/ai/diagnosis")
+def Ai_diagnosis(data: AiDiagnosis):
+    print("Age:", data.age, "Sick:", data.sick)
 
-#     messages = [
-#         {"role": "user", "content": build_prompt(data.age, data.sick)}
-#     ]
+    messages = [
+        {"role": "user", "content": build_prompt(data.age, data.sick)}
+    ]
 
-#     inputs = tokenizer.apply_chat_template(
-#         messages,
-#         add_generation_prompt=True,
-#         tokenize=True,
-#         return_dict=True,
-#         return_tensors="pt"
-#     ).to(model.device)
+    inputs = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt"
+    ).to(model.device)
 
-#     with torch.inference_mode():
-#         outputs = model.generate(
-#             **inputs,
-#             max_new_tokens=800,
-#             do_sample=True,
-#             temperature=0.7,
-#             top_p=0.9
-#         )
+    with torch.inference_mode():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=800,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.9
+        )
 
-#     response_text = tokenizer.decode(
-#         outputs[0][inputs["input_ids"].shape[-1]:],
-#         skip_special_tokens=True
-#     )
+    response_text = tokenizer.decode(
+        outputs[0][inputs["input_ids"].shape[-1]:],
+        skip_special_tokens=True
+    )
 
-#     print("AI Response:", response_text)
+    print("AI Response:", response_text)
 
-#     return {
-#         "AI_response": response_text,
-#         "success": True,
-#         "message": "Data Added successful"
-#     }
-
-
+    return {
+        "AI_response": response_text,
+        "success": True,
+        "message": "Data Added successful"
+    }
 
 
+def model_classification(image_path):
+    checkpoint = torch.load('dental_classifier_balanced.pth', weights_only=False)
+    model = RegularizedDentalClassifier(num_classes=6)
+    model.load_state_dict(checkpoint['model_state_dict'])
+    model.eval()
+
+    # Prepare image
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                        std=[0.229, 0.224, 0.225])
+    ])
+
+    image = Image.open(image_path).convert('RGB')
+    input_tensor = transform(image).unsqueeze(0)
+
+    # Predict
+    with torch.no_grad():
+        output = model(input_tensor)
+        _, predicted = torch.max(output, 1)
+        
+    class_names = checkpoint['class_names']
+    print(f"Predicted: {class_names[predicted.item()]}")
+    return class_names[predicted.item()]
+
+
+
+
+@app.post("/api/v1/AI/classification")
+async def classify(
+      image: UploadFile = File(None),
+        ):
+    try :
+
+        if image:
+            ext = os.path.splitext(image.filename)[1]  # الامتداد
+            filename_image = f"{uuid.uuid4()}{ext}"         # اسم فريد
+            filepath_image = os.path.join(UPLOAD_FOLDER, filename_image)
+
+            with open(filepath_image, 'wb') as f:
+                f.write(await image.read())
+            
+            prediction = model_classification(filepath_image)
+        else:
+            print("image file: No file")
+
+       
+        
+
+        return {"success": True, "predict": prediction}
+    except sqlite3.Error as e:
+            print(f"Database error: {e}")
+            return {"success": False, "message": "Server error, please try again"} 
 
 
 
@@ -587,7 +684,6 @@ def get_doctor_data_api(doctorID : str):
     try:
 
         data = get_doctor_student_cases(doctorID)
-
         return {"success": True, "data": data}
     except sqlite3.Error as e:
         print(f"Database error: {e}")
@@ -630,7 +726,61 @@ async def edit_case(
 
 
 
+@app.get("/api/v1/college/batchs")
+async def get_batchs():
+    try:
+        data = get_batchs_data()
+        print(data)
 
+        return {"success": True, "data" : data}
+    except Exception as e:
+        print(f"Error {e}")
+        return {"success": False, "message": "Server error, please try again"}  
+    
+
+@app.get("/api/v1/college/doctor")
+async def get_college_faculty_member():
+    try:
+        data = get_college_doctor()
+        print(data)
+
+        return {"success": True, "data" : data}
+    except Exception as e:
+        print(f"Error {e}")
+        return {"success": False, "message": "Server error, please try again"}  
+
+@app.get("/api/v1/college/student")
+async def get_college_faculty_member():
+    try:
+        data = get_college_student()
+
+        return {"success": True, "data" : data}
+    except Exception as e:
+        print(f"Error {e}")
+        return {"success": False, "message": "Server error, please try again"}  
+    
+
+@app.get("/api/v1/college/departments")
+async def get_college_departments_data():
+    try:
+        data = get_college_departments()
+
+        return {"success": True, "data" : data}
+    except Exception as e:
+        print(f"Error {e}")
+        return {"success": False, "message": "Server error, please try again"}  
+
+
+
+@app.get("/api/v1/college/rounds")
+async def get_college_rounds_data():
+    try:
+        data = get_college_rounds()
+
+        return {"success": True, "data" : data}
+    except Exception as e:
+        print(f"Error {e}")
+        return {"success": False, "message": "Server error, please try again"}  
 
 
 

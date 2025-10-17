@@ -22,8 +22,6 @@
             position: relative;
         }
 
-       
-
         .login-container {
             display: flex;
             width: 100%;
@@ -50,7 +48,6 @@
             }
         }
 
-        /* Left Panel - Form */
         .form-panel {
             flex: 1;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
@@ -73,6 +70,7 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
 
         .logo {
@@ -95,6 +93,11 @@
             50% { transform: scale(1.05); }
         }
 
+        .brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
         .brand-name {
             color: #0f4c75;
             font-size: 24px;
@@ -109,6 +112,24 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-top: 5px;
+        }
+
+        .create-account-btn {
+            background: linear-gradient(to right, #0939db, #90caf9);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(9, 57, 219, 0.3);
+        }
+
+        .create-account-btn:hover {
+            box-shadow: 0 6px 20px rgba(9, 57, 219, 0.4);
+            transform: translateY(-2px);
         }
 
         .form-content {
@@ -192,24 +213,6 @@
             fill: #3282b8;
         }
 
-        .forgot-password {
-            text-align: right;
-            margin-bottom: 35px;
-        }
-
-        .forgot-password a {
-            color: #3282b8;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .forgot-password a:hover {
-            color: #0f4c75;
-            text-decoration: underline;
-        }
-
         .login-btn {
             width: 100%;
             padding: 18px;
@@ -248,88 +251,6 @@
             box-shadow: 0 15px 35px rgba(15, 76, 117, 0.4);
         }
 
-        .divider {
-            display: flex;
-            align-items: center;
-            margin: 30px 0;
-            color: #64748b;
-            font-size: 14px;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: #e2e8f0;
-        }
-
-        .divider span {
-            padding: 0 20px;
-            background: rgba(255, 255, 255, 0.9);
-        }
-
-        .quick-access {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .quick-btn {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.6);
-            color: #0f4c75;
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            backdrop-filter: blur(10px);
-        }
-
-        .quick-btn:hover {
-            border-color: #3282b8;
-            background: rgba(50, 130, 184, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .emergency-access {
-            text-align: center;
-            padding: 15px;
-            background: rgba(239, 68, 68, 0.1);
-            border-radius: 10px;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            margin-bottom: 20px;
-        }
-
-        .emergency-text {
-            color: #dc2626;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .help-section {
-            text-align: center;
-            color: #64748b;
-            font-size: 13px;
-        }
-
-        .help-section a {
-            color: #3282b8;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .help-section a:hover {
-            text-decoration: underline;
-        }
-
-        /* Right Panel - Enhanced Medical Theme */
         .image-panel {
             flex: 1;
             background: linear-gradient(135deg, #0f4c75 0%, #3282b8 50%, #bbe1fa 100%);
@@ -436,18 +357,99 @@
             50% { transform: translate(-20px, -20px); }
         }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(100%);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
         }
 
-        /* Responsive Design */
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-title {
+            color: #0f4c75;
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 32px;
+            color: #64748b;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+            color: #0f4c75;
+        }
+
+        .form-label {
+            display: block;
+            color: #0f4c75;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #0f4c75, #3282b8);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(15, 76, 117, 0.3);
+        }
+
         @media (max-width: 1024px) {
             .login-container {
                 flex-direction: column;
@@ -470,10 +472,6 @@
         }
 
         @media (max-width: 640px) {
-            .quick-access {
-                grid-template-columns: 1fr;
-            }
-            
             .main-title {
                 font-size: 28px;
             }
@@ -491,26 +489,31 @@
             .brand-name {
                 font-size: 20px;
             }
+
+            .logo-container {
+                gap: 10px;
+            }
+
+            .create-account-btn {
+                width: 100%;
+                margin-top: 10px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="bg-animation">
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
-        <div class="floating-shape"></div>
-    </div>
-    
     <div class="login-container">
-        <!-- Left Panel - Enhanced Form -->
         <div class="form-panel">
             <div class="header-section">
                 <div class="logo-container">
                     <div class="logo">O</div>
-                    <div>
+                    <div class="brand-info">
                         <div class="brand-name">Dental Hospital</div>
                         <div class="hospital-subtitle">Assiut University</div>
                     </div>
+                    <button class="create-account-btn" onclick="openAttendanceModal()">
+                        Create Account 
+                    </button>
                 </div>
             </div>
             
@@ -522,7 +525,7 @@
                     <div class="form-group">
                         <label class="input-label">Email</label>
                         <div class="input-container">
-                            <input type="text" id="username" name="username" class="form-input" placeholder="Enter your staff ID" required>
+                            <input type="email" id="username" name="username" class="form-input" placeholder="Enter your email" required>
                             <svg class="input-icon" viewBox="0 0 24 24">
                                 <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                             </svg>
@@ -538,20 +541,12 @@
                             </svg>
                         </div>
                     </div>
-
-                   
                      
                     <button type="submit" class="login-btn">Sign In</button>
                 </form>
-
-               
-
-        
-                
             </div>
         </div>
         
-        <!-- Right Panel - Enhanced Medical Theme -->
         <div class="image-panel">
             <div class="background-pattern"></div>
             
@@ -577,50 +572,134 @@
         </div>
     </div>
 
+    <div id="attendanceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Create New Account</h4>
+                <button class="close-btn" onclick="closeAttendanceModal()">&times;</button>
+            </div>
+           
+            <form id="attendanceForm" onsubmit="handleFormSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="c_email" name="c_email" placeholder="Enter Email Address" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="c_password" name="c_password" placeholder="Enter Password" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ID</label>
+                    <input type="text" class="form-input" id="c_id" name="c_id" placeholder="Enter ID" required>
+                </div>
+
+                <button type="submit" class="save-btn">
+                    Create Account
+                </button>
+            </form>
+        </div>
+    </div>
+
     <script>
-        // Configuration - Easy to modify for your FastAPI endpoints
-       const API_CONFIG = { 
-    BASE_URL: "http://127.0.0.1:8000/api/v1",  // عنوان السيرفر (FastAPI)
-    ENDPOINTS: {
-        LOGIN: "/student/login"                 // لينك تسجيل الدخول
-    }
-};
+        const API_CONFIG = { 
+            BASE_URL: "http://127.0.0.1:8000/api/v1",
+            ENDPOINTS: {
+                LOGIN: "/student/login",
+                REGISTER: "/student/register"
+            }
+        };
 
-       async function login(email, password){
-        const response = await fetch( API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.LOGIN,
-        
-        {
-            method : "POST",
-            headers : {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })  // البيانات اللي هتتبعت للباك إند
+        async function login(email, password) {
+            try {
+                const response = await fetch(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.LOGIN, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                return await response.json();
+            } catch (error) {
+                console.error("Login error:", error);
+                return { success: false, message: "Connection error. Please try again." };
+            }
         }
-        
-        
-        
-        );
-         return await response.json();  // النتيجة من السيرفر (JSON)
 
-       }
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById("username").value;
+            const password = document.getElementById("userid").value;
+            
+            const result = await login(email, password);
+            
+            if (result.success) {
+                alert("Login successful!");
+                window.location.href = "/student?student_id=" + result.ID;
+            } else {
+                alert("Login failed: " + (result.message || "Invalid credentials"));
+            }
+        }
 
-       async function handleLogin(event) {
-    event.preventDefault(); // عشان الفورم ما يعملش refresh
+        function openAttendanceModal() {
+            const modal = document.getElementById('attendanceModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
 
-    const email = document.getElementById("username").value;
-    const password = document.getElementById("userid").value;
+        function closeAttendanceModal() {
+            const modal = document.getElementById('attendanceModal');
+            modal.classList.remove('active');
+            document.getElementById('attendanceForm').reset();
+            document.body.style.overflow = 'auto';
+        }
 
-    const result = await login(email, password);
+        window.onclick = function(event) {
+            const modal = document.getElementById('attendanceModal');
+            if (event.target === modal) {
+                closeAttendanceModal();
+            }
+        }
 
-    if (result.success) {
-        alert("Login successful ");
-       window.location.href = "/student?student_id=" + result.ID;  // مثلًا يحوله لصفحة تانية
-    } else {
-        alert("Login failed: " + result.message);
-    }
-}
+        async function create_Account(c_email, c_password, c_id) {
+            try {
+                const response = await fetch(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.REGISTER, { 
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        email: c_email,
+                        password: c_password,
+                        id: c_id
+                    })
+                });
 
-      
+                return await response.json();
+            } catch (error) {
+                console.error("Register error:", error);
+                return { success: false, message: "Connection error. Please try again." };
+            }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const email = document.getElementById("c_email").value;
+            const password = document.getElementById("c_password").value;
+            const id = document.getElementById("c_id").value;
+            
+            const result = await create_Account(email, password, id);
+                
+            if (result.success) {
+                alert("Account created successfully!");
+                closeAttendanceModal();
+            } else {
+                alert("Account creation failed: " + (result.message || "Invalid credentials"));
+            }
+        }
     </script>
 </body>
 </html>
