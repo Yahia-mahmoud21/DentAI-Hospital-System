@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Yahia Mahmoud — Dental AI</title>
+  <meta name="description" content="Yahia Mahmoud — One-page site featuring Dental Image Classification and Dental AI Chat." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<style>
+    /* ===========================
+   CSS Reset & Base
+   =========================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===========================
+   CSS Custom Properties
+   =========================== */
+:root {
+  /* Dental Theme Colors */
+  --primary-blue: #007BFF;
+  --primary-blue-light: #F0F7FF;
+  --primary-blue-dark: #0056B3;
+  --success-green: #28A745;
+  --danger-red: #DC3545;
+  --warning-yellow: #FFC107;
+  --light-gray: #F8F9FA;
+  --medium-gray: #6C757D;
+  --dark-gray: #343A40;
+  
+  /* Layout */
+  --sidebar-collapsed: 60px;
+  --sidebar-expanded: 240px;
+  --patient-queue-width: 304px;
+  
+  /* Light Theme */
+  --bg-primary: #FAFBFC;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #F8F9FA;
+  --text-primary: #1A202C;
+  --text-secondary: #4A5568;
+  --text-muted: #718096;
+  --border-color: #E2E8F0;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0F172A;
+  --bg-secondary: #1E293B;
+  --bg-tertiary: #334155;
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --border-color: #334155;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* ===========================
+   Typography & Body
+   =========================== */
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color var(--transition-base), color var(--transition-base);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.5rem; }
+h2 { font-size: 2rem; }
+h3 { font-size: 1.5rem; }
+
+a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-blue-dark);
+}
+
+/* ===========================
+   Layout Utilities
+   =========================== */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.section {
+  padding: 4rem 0;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2.25rem;
+  color: var(--text-primary);
+}
+
+/* ===========================
+   Header
+   =========================== */
+.site-header {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.brand i {
+  color: var(--primary-blue);
+  font-size: 1.5rem;
+  animation: tooth-wiggle 3s ease-in-out infinite;
+}
+
+@keyframes tooth-wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav a {
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition: color var(--transition-fast);
+}
+
+.nav a:hover {
+  color: var(--primary-blue);
+}
+
+.theme-toggle {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  background: var(--primary-blue);
+  color: white;
+  border-color: var(--primary-blue);
+  transform: rotate(20deg);
+}
+
+.theme-toggle i {
+  transition: transform var(--transition-base);
+}
+
+/* ===========================
+   Hero Section
+   =========================== */
+.hero {
+  background: linear-gradient(135deg, var(--primary-blue-light) 0%, var(--bg-secondary) 100%);
+  padding: 6rem 0;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .hero {
+  background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero-text h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-text p {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1rem;
+}
+
+.hero-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.blob {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+  border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+  animation: blob-morph 8s ease-in-out infinite;
+  opacity: 0.15;
+}
+
+@keyframes blob-morph {
+  0%, 100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+  25% { border-radius: 58% 42% 75% 25% / 76% 46% 54% 24%; }
+  50% { border-radius: 50% 50% 33% 67% / 55% 27% 73% 45%; }
+  75% { border-radius: 33% 67% 58% 42% / 63% 68% 32% 37%; }
+}
+
+/* ===========================
+   Buttons
+   =========================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all var(--transition-fast);
+  font-size: 1rem;
+}
+
+.btn.primary {
+  background: var(--primary-blue);
+  color: white;
+}
+
+.btn.primary:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn.secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-blue);
+}
+
+/* ===========================
+   Cards Grid
+   =========================== */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-blue);
+}
+
+.card-icon {
+  width: 60px;
+  height: 60px;
+  background: var(--primary-blue-light);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  color: var(--primary-blue);
+  transition: all var(--transition-base);
+}
+
+[data-theme="dark"] .card-icon {
+  background: var(--bg-tertiary);
+}
+
+.card:hover .card-icon {
+  transform: scale(1.1) rotate(5deg);
+  background: var(--primary-blue);
+  color: white;
+}
+
+.card-icon i {
+  transition: transform var(--transition-base);
+}
+
+.card h3 {
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.card p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.card-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--primary-blue);
+  font-weight: 600;
+  transition: gap var(--transition-fast);
+}
+
+.card:hover .card-cta {
+  gap: 0.75rem;
+}
+
+/* ===========================
+   Page Header
+   =========================== */
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.page-header i {
+  font-size: 2rem;
+  color: var(--primary-blue);
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.page-header h2 {
+  margin: 0;
+}
+
+/* ===========================
+   AI Container (Classifier)
+   =========================== */
+.ai-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.typing-label {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.125rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* Drop Zone */
+.drop-zone {
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  text-align: center;
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.drop-zone.drag-over {
+  border-color: var(--primary-blue);
+  background: var(--primary-blue-light);
+}
+
+[data-theme="dark"] .drop-zone.drag-over {
+  background: var(--bg-tertiary);
+}
+
+.drop-zone-icon {
+  font-size: 4rem;
+  color: var(--primary-blue);
+  margin-bottom: 1rem;
+  animation: float-bounce 2s ease-in-out infinite;
+}
+
+@keyframes float-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.drop-zone:hover .drop-zone-icon {
+  animation: float-bounce 1s ease-in-out infinite;
+  color: var(--primary-blue-dark);
+}
+
+.drop-zone h3 {
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.drop-zone p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.upload-btn {
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.upload-btn:hover {
+  background: var(--primary-blue-dark);
+  transform: translateY(-2px);
+}
+
+.file-input {
+  display: none;
+}
+
+/* Preview Container */
+.preview-container {
+  display: none;
+  margin-top: 2rem;
+}
+
+.preview-container.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.preview-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.preview-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.clear-btn {
+  background: var(--danger-red);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.clear-btn:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 400px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  background: var(--bg-tertiary);
+}
+
+.analyze-btn {
+  width: 100%;
+  background: var(--success-green);
+  color: white;
+  border: none;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1.125rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.analyze-btn:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+/* Loading Container */
+.loading-container {
+  display: none;
+  text-align: center;
+  margin-top: 2rem;
+  padding: 3rem 2rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+}
+
+.loading-container.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--primary-blue);
+  border-radius: 50%;
+  margin: 0 auto 1.5rem;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.typing-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.typing-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--primary-blue);
+  border-radius: 50%;
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* Result Container */
+.result-container {
+  display: none;
+  margin-top: 2rem;
+}
+
+.result-container.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.result-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+.result-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--text-primary);
+}
+
+.result-title i {
+  color: var(--success-green);
+}
+
+.diagnosis-badge {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: var(--success-green);
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  width: 100%;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.diagnosis-badge.warning {
+  background: var(--warning-yellow);
+  color: var(--dark-gray);
+}
+
+.diagnosis-badge.danger {
+  background: var(--danger-red);
+}
+
+.confidence-bar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--success-green) 0%, var(--primary-blue) 100%);
+  transition: width 0.6s ease;
+}
+
+.result-text {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+}
+
+.action-btn.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.action-btn.secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-blue);
+  transform: translateY(-2px);
+}
+
+/* Error Message */
+.error-message {
+  display: none;
+  background: #FEE;
+  border: 1px solid var(--danger-red);
+  color: var(--danger-red);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.error-message.active {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+/* ===========================
+   Chat Section
+   =========================== */
+.chat-container {
+  max-width: 800px;
+  margin: 0 auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.chat-window {
+  height: 500px;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background: var(--bg-tertiary);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-message {
+  display: flex;
+  gap: 0.75rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.chat-message.user {
+  flex-direction: row-reverse;
+}
+
+.chat-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.chat-message.assistant .chat-avatar {
+  background: var(--primary-blue);
+  color: white;
+}
+
+.chat-message.user .chat-avatar {
+  background: var(--success-green);
+  color: white;
+}
+
+.chat-bubble {
+  max-width: 70%;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  line-height: 1.6;
+  word-wrap: break-word;
+}
+
+.chat-message.assistant .chat-bubble {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.chat-message.user .chat-bubble {
+  background: var(--primary-blue);
+  color: white;
+}
+
+/* Markdown styling in chat bubbles */
+.chat-bubble strong {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chat-bubble em {
+  font-style: italic;
+}
+
+.chat-bubble code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.chat-bubble li {
+  margin-left: 1.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.chat-bubble br {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+.chat-message.user .chat-bubble strong,
+.chat-message.user .chat-bubble em {
+  color: white;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+}
+
+#chatInput {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  transition: border-color var(--transition-fast);
+}
+
+#chatInput:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+}
+
+#sendBtn {
+  padding: 0.75rem 1.5rem;
+}
+
+.chat-disclaimer {
+  padding: 0.75rem 1rem;
+  background: var(--warning-yellow);
+  color: var(--dark-gray);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .chat-disclaimer {
+  background: rgba(255, 193, 7, 0.2);
+  color: var(--warning-yellow);
+}
+
+/* ===========================
+   Footer
+   =========================== */
+.site-footer {
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 2rem 0;
+  margin-top: 4rem;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  color: var(--text-secondary);
+}
+
+.footer-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.footer-right a {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border-radius: 50%;
+  color: var(--text-primary);
+  transition: all var(--transition-fast);
+}
+
+.footer-right a:hover {
+  background: var(--primary-blue);
+  color: white;
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: var(--shadow-md);
+}
+
+.footer-right a i {
+  transition: transform var(--transition-base);
+}
+
+.footer-right a:hover i {
+  transform: rotate(360deg);
+}
+
+/* ===========================
+   Animations
+   =========================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===========================
+   Responsive
+   =========================== */
+@media (max-width: 768px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero-art {
+    display: none;
+  }
+  
+  .hero-text h1 {
+    font-size: 2rem;
+  }
+  
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .nav {
+    gap: 1rem;
+  }
+  
+  .nav a {
+    display: none;
+  }
+  
+  .footer-inner {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .chat-bubble {
+    max-width: 85%;
+  }
+}
+
+
+
+</style>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <i class="fas fa-tooth"></i>
+        <span>DentAI</span>
+      </div>
+      <nav class="nav">
+        <a href="#models">Models</a>
+        <a href="#contact">Contact</a>
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <h1>Dental AI Experiences</h1>
+          <p>Explore instant dental image classification and a dental-themed AI assistant — all in your browser.</p>
+          <div class="hero-cta">
+            <a href="#models" class="btn primary"><i class="fas fa-rocket"></i> Try the Models</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="blob"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="models" class="section container">
+      <h2 class="section-title">AI Models</h2>
+      <div class="cards-grid">
+        <a href="#classifier" class="card-link">
+          <article class="card">
+            <div class="card-icon"><i class="fas fa-brain"></i></div>
+            <h3>Dental Image Classification</h3>
+            <p>Upload a dental photograph for instant AI analysis with a beautiful, guided UI.</p>
+            <span class="card-cta">Open <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+        <a href="#chat" class="card-link">
+          <article class="card">
+            <div class="card-icon"><i class="fas fa-robot"></i></div>
+            <h3>Dental AI Chat</h3>
+            <p>Chat with a dental-themed assistant for general guidance and oral-care tips.</p>
+            <span class="card-cta">Open <i class="fas fa-arrow-right"></i></span>
+          </article>
+        </a>
+      </div>
+    </section>
+
+    <!-- Dental Image Classification Section -->
+    <section id="classifier" class="section container">
+      <div class="page-header">
+        <i class="fas fa-brain"></i>
+        <h2>AI Dental Classification</h2>
+      </div>
+
+      <div class="ai-container">
+        <div class="typing-label">
+          <span class="typing-text" id="typingText">Upload a dental photograph for instant AI analysis</span>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <h3>Drop your dental image here</h3>
+          <p>or click to browse from your device</p>
+          <button class="upload-btn" id="browseBtn">
+            <i class="fas fa-folder-open"></i> Select Image
+          </button>
+          <input type="file" id="fileInput" class="file-input" accept="image/*" />
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+          <div class="preview-card">
+            <div class="preview-header">
+              <div class="preview-title">
+                <i class="fas fa-image"></i>
+                Image Preview
+              </div>
+              <button class="clear-btn" id="clearBtn">
+                <i class="fas fa-times"></i> Clear
+              </button>
+            </div>
+            <img id="previewImage" class="preview-image" alt="Preview" />
+            <button class="analyze-btn" id="analyzeBtn">
+              <i class="fas fa-microscope"></i> Analyze Image
+            </button>
+          </div>
+        </div>
+
+        <div class="loading-container" id="loadingContainer">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Analyzing dental image...</div>
+          <div class="typing-indicator" aria-hidden="true">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+          <div class="result-card">
+            <div class="result-title">
+              <i class="fas fa-clipboard-check"></i>
+              Diagnostic Results
+            </div>
+            <div class="result-content">
+              <div class="diagnosis-badge" id="diagnosisBadge">Normal Tooth Structure</div>
+             
+              <div class="result-text" id="resultText">
+                The AI analysis indicates a healthy tooth structure with no visible signs of decay, fractures, or abnormalities. Regular dental check-ups are recommended for maintaining optimal oral health.
+              </div>
+            </div>
+            <div class="action-buttons">
+              <button class="action-btn secondary" id="newAnalysisBtn">
+                <i class="fas fa-redo"></i> New Analysis
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="error-message" id="errorMessage" role="alert">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span id="errorText">An error occurred. Please try again.</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Dental AI Chat Section -->
+    <section id="chat" class="section container">
+      <div class="page-header">
+        <i class="fas fa-robot"></i>
+        <h2>Dental AI Chat</h2>
+      </div>
+
+      <div class="chat-container">
+        <div class="chat-window" id="chatWindow" aria-live="polite">
+          <!-- Messages injected here -->
+        </div>
+        <div class="chat-input-row">
+          <input id="chatInput" type="text" placeholder="Ask about oral care, sensitivity, brushing routines..." aria-label="Chat input" />
+          <button id="sendBtn" class="btn primary"><i class="fas fa-paper-plane"></i> Send</button>
+        </div>
+        <div class="chat-disclaimer">
+          <i class="fas fa-triangle-exclamation"></i> Educational purposes only. Not a substitute for professional diagnosis.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact" class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-left">
+        <span>© <span id="year"></span> Dental AI System</span>
+      </div>
+      
+    </div>
+  </footer>
+
+  <script >
+    // ===========================
+// Theme Toggle
+// ===========================
+const themeToggle = document.getElementById('themeToggle');
+const html = document.documentElement;
+
+// Load saved theme or default to light
+const savedTheme = localStorage.getItem('theme') || 'light';
+html.setAttribute('data-theme', savedTheme);
+updateThemeIcon(savedTheme);
+
+themeToggle.addEventListener('click', () => {
+  const currentTheme = html.getAttribute('data-theme');
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  updateThemeIcon(newTheme);
+});
+
+function updateThemeIcon(theme) {
+  const icon = themeToggle.querySelector('i');
+  icon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+}
+
+// ===========================
+// Dental Image Classification
+// ===========================
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.getElementById('browseBtn');
+const previewContainer = document.getElementById('previewContainer');
+const previewImage = document.getElementById('previewImage');
+const clearBtn = document.getElementById('clearBtn');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const loadingContainer = document.getElementById('loadingContainer');
+const resultContainer = document.getElementById('resultContainer');
+const diagnosisBadge = document.getElementById('diagnosisBadge');
+const resultText = document.getElementById('resultText');
+const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+const errorMessage = document.getElementById('errorMessage');
+const errorText = document.getElementById('errorText');
+
+let currentFile = null;
+
+// Browse button click
+browseBtn.addEventListener('click', () => fileInput.click());
+
+// File input change
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) handleFile(file);
+});
+
+// Drag and drop
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    handleFile(file);
+  }
+});
+
+function handleFile(file) {
+  currentFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    previewImage.src = e.target.result;
+    dropZone.style.display = 'none';
+    previewContainer.classList.add('active');
+    hideError();
+  };
+  reader.readAsDataURL(file);
+}
+
+// Clear button
+clearBtn.addEventListener('click', resetClassifier);
+
+// Analyze button
+analyzeBtn.addEventListener('click', analyzeImage);
+
+// New analysis button
+newAnalysisBtn.addEventListener('click', resetClassifier);
+
+function resetClassifier() {
+  currentFile = null;
+  fileInput.value = '';
+  dropZone.style.display = 'block';
+  previewContainer.classList.remove('active');
+  loadingContainer.classList.remove('active');
+  resultContainer.classList.remove('active');
+  hideError();
+}
+
+// API Configuration - Update this with your FastAPI server URL
+const API_BASE_URL = 'http://127.0.0.1:8000'; // Change to your server URL
+
+async function analyzeImage() {
+  if (!currentFile) return;
+  
+  previewContainer.classList.remove('active');
+  loadingContainer.classList.add('active');
+  hideError();
+  
+  try {
+    // Create FormData for image upload
+    const formData = new FormData();
+    formData.append('image', currentFile);
+    
+    // Call your FastAPI classification endpoint
+    const response = await fetch(`${API_BASE_URL}/api/v1/AI/classification`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error('Classification failed');
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Map prediction to result format
+      const result = mapPredictionToResult(data.predict);
+      displayResult(result);
+    } else {
+      showError('Classification failed. Please try again.');
+    }
+  } catch (error) {
+    console.error('Error:', error);
+    showError('Unable to connect to AI server. Please ensure the server is running.');
+  }
+}
+
+// Map your model's predictions to UI format
+function mapPredictionToResult(prediction) {
+  const predictionMap = {
+    'Normal': {
+      diagnosis: 'Normal Tooth Structure',
+      confidence: 0.92,
+      details: 'The AI analysis indicates a healthy tooth structure with no visible signs of decay, fractures, or abnormalities. Regular dental check-ups are recommended for maintaining optimal oral health.',
+      type: 'success'
+    },
+    'Caries': {
+      diagnosis: 'Dental Caries Detected',
+      confidence: 0.88,
+      details: 'Cavity detected. Immediate consultation with a dentist is strongly advised for proper diagnosis and treatment.',
+      type: 'danger'
+    },
+    'Gingivitis': {
+      diagnosis: 'Gingivitis Detected',
+      confidence: 0.85,
+      details: 'Gum inflammation observed. Professional cleaning and improved oral hygiene routine recommended.',
+      type: 'warning'
+    },
+    'Plaque': {
+      diagnosis: 'Plaque Buildup Detected',
+      confidence: 0.87,
+      details: 'Moderate plaque accumulation observed. Professional cleaning recommended.',
+      type: 'warning'
+    },
+    'Calculus': {
+      diagnosis: 'Calculus (Tartar) Detected',
+      confidence: 0.86,
+      details: 'Hardened plaque detected. Professional dental cleaning required.',
+      type: 'warning'
+    },
+    'Tooth Discoloration': {
+      diagnosis: 'Tooth Discoloration',
+      confidence: 0.84,
+      details: 'Tooth discoloration observed. Consult with dentist for whitening options.',
+      type: 'warning'
+    }
+  };
+  
+  // Return mapped result or default
+  return predictionMap[prediction] || {
+    diagnosis: prediction,
+    confidence: 0.80,
+    details: 'AI analysis complete. Please consult with a dental professional for detailed diagnosis.',
+    type: 'warning'
+  };
+}
+
+function displayResult(result) {
+  loadingContainer.classList.remove('active');
+  resultContainer.classList.add('active');
+  
+  diagnosisBadge.textContent = result.diagnosis;
+  diagnosisBadge.className = 'diagnosis-badge ' + (result.type === 'success' ? '' : result.type);
+  
+  resultText.textContent = result.details;
+}
+
+function showError(message) {
+  errorText.textContent = message;
+  errorMessage.classList.add('active');
+  loadingContainer.classList.remove('active');
+  previewContainer.classList.remove('active');
+  resultContainer.classList.remove('active');
+}
+
+function hideError() {
+  errorMessage.classList.remove('active');
+}
+
+// ===========================
+// Dental AI Chat
+// ===========================
+const chatWindow = document.getElementById('chatWindow');
+const chatInput = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+
+// Welcome message
+addMessage('assistant', 'Hello! I\'m your dental AI assistant. Ask me about oral care, brushing techniques, sensitivity, or general dental health. How can I help you today?');
+
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') sendMessage();
+});
+
+async function sendMessage() {
+  const message = chatInput.value.trim();
+  if (!message) return;
+  
+  addMessage('user', message);
+  chatInput.value = '';
+  
+  // Show typing indicator
+  const typingId = addTypingIndicator();
+  
+  try {
+    // Call your FastAPI streaming endpoint
+    const response = await fetch(`${API_BASE_URL}/api/ai/diagnosis/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt: message
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Chat request failed');
+    }
+    
+    // Remove typing indicator and create message bubble for streaming
+    removeTypingIndicator(typingId);
+    
+    // Create message container for streaming text
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message assistant';
+    
+    const avatar = document.createElement('div');
+    avatar.className = 'chat-avatar';
+    avatar.innerHTML = '<i class="fas fa-tooth"></i>';
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble';
+    
+    messageDiv.appendChild(avatar);
+    messageDiv.appendChild(bubble);
+    chatWindow.appendChild(messageDiv);
+    
+    // Read the stream
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) break;
+      
+      // Decode the chunk and add to full text
+      const chunk = decoder.decode(value, { stream: true });
+      fullText += chunk;
+      
+      // Update bubble with parsed markdown
+      bubble.innerHTML = parseMarkdown(fullText);
+      
+      // Auto-scroll to bottom
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    
+  } catch (error) {
+    console.error('Chat Error:', error);
+    removeTypingIndicator(typingId);
+    addMessage('assistant', 'Unable to connect to AI server. Please ensure the server is running.');
+  }
+}
+
+// Add message with typing effect and markdown support
+async function addMessageWithTyping(role, text) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${role}`;
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'chat-avatar';
+  avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-tooth"></i>';
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  
+  messageDiv.appendChild(avatar);
+  messageDiv.appendChild(bubble);
+  chatWindow.appendChild(messageDiv);
+  
+  // Typing effect
+  let index = 0;
+  const speed = 20; // milliseconds per character
+  
+  function typeCharacter() {
+    if (index < text.length) {
+      const char = text.charAt(index);
+      bubble.innerHTML = parseMarkdown(text.substring(0, index + 1));
+      index++;
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+      setTimeout(typeCharacter, speed);
+    }
+  }
+  
+  typeCharacter();
+}
+
+// Simple markdown parser
+function parseMarkdown(text) {
+  // Escape HTML first
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Bold: **text** or __text__
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+  
+  // Italic: *text* or _text_
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/_(.+?)_/g, '<em>$1</em>');
+  
+  // Code: `code`
+  html = html.replace(/`(.+?)`/g, '<code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+  
+  // Line breaks
+  html = html.replace(/\n/g, '<br>');
+  
+  // Lists (simple)
+  html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/^\* (.+)$/gm, '<li>$1</li>');
+  html = html.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+  
+  return html;
+}
+
+function addMessage(role, text) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chat-message ${role}`;
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'chat-avatar';
+  avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-tooth"></i>';
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.innerHTML = parseMarkdown(text);
+  
+  messageDiv.appendChild(avatar);
+  messageDiv.appendChild(bubble);
+  chatWindow.appendChild(messageDiv);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'chat-message assistant typing-indicator-msg';
+  typingDiv.id = 'typing-' + Date.now();
+  
+  const avatar = document.createElement('div');
+  avatar.className = 'chat-avatar';
+  avatar.innerHTML = '<i class="fas fa-tooth"></i>';
+  
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+  
+  typingDiv.appendChild(avatar);
+  typingDiv.appendChild(bubble);
+  chatWindow.appendChild(typingDiv);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  
+  return typingDiv.id;
+}
+
+function removeTypingIndicator(id) {
+  const typing = document.getElementById(id);
+  if (typing) typing.remove();
+}
+
+// ===========================
+// Smooth Scroll
+// ===========================
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ===========================
+// Footer Year
+// ===========================
+document.getElementById('year').textContent = new Date().getFullYear();
+
+  </script>
+</body>
+</html>

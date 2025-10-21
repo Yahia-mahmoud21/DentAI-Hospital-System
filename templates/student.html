@@ -1772,13 +1772,16 @@
                 </div>
                 <div class="tooltip">Patients</div>
             </div>
-            <div class="sidebar-item">
-                <div class="sidebar-icon" data-page="calendar">
-                    <i class="fa-solid fa-brain"></i>
-                    <span class="sidebar-text">Calendar</span>
+           <div class="sidebar-item">
+                <div class="sidebar-icon">
+                    <a href="/AI" target="_blank" style="text-decoration: none;">
+                        <i class="fa-solid fa-brain"></i>
+                        <span class="sidebar-text">AI Models</span>
+                    </a>
                 </div>
-                <div class="tooltip">Calendar</div>
+               
             </div>
+
             <div class="sidebar-item">
                 <div class="sidebar-icon" data-page="reports">
                     <i class="fas fa-chart-bar"></i>
@@ -2130,14 +2133,7 @@
                     
                     
                  
-    <button id="addPatientAi" class="action-btn primary" onclick="Ai_run()">
-        <div class="card-title AI">
-            <i class="fa-solid fa-star"></i>
-            AI Assistant
-            <div class="loading-spinner"></div>
-        </div>
-    </button>
-
+   
 
 <!-- Add this result container after your button -->
 <div id="result-container" class="result-container">
@@ -3324,64 +3320,7 @@ async function typeMarkdown(element, markdownText, speed = 10) {
         typeWord();
     });
 }
-async function Ai_run() {
-    const button = document.getElementById("addPatientAi");
-    const spinner = button.querySelector('.loading-spinner');
-    const resultContainer = document.getElementById("result-container");
-    const typingIndicator = document.getElementById("typing-indicator");
-    const aiResponse = document.getElementById("ai-response");
-    
-    const age = parseInt(document.getElementById("age_ai").innerText);
-    const sick = document.getElementById("sick_ai").innerText;
 
-    console.log(age, sick);
-
-    // Start loading state
-    button.disabled = true;
-    button.classList.add('pulse');
-    spinner.style.display = 'block';
-    
-    // Show result container and typing indicator
-    resultContainer.classList.add('show');
-    typingIndicator.classList.add('show');
-    aiResponse.innerHTML = '';
-
-    try {
-        const response = await fetch("http://127.0.0.1:8000/api/ai/diagnosis", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                age,
-                sick
-            })
-        });
-
-        const result = await response.json();
-
-        // Hide typing indicator
-        typingIndicator.classList.remove('show');
-
-        if (result.success) {
-            // Type the markdown response with animation
-            await typeMarkdown(aiResponse, result.AI_response, 20);
-        } else {
-            aiResponse.innerHTML = "Failed: " + result.message;
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        typingIndicator.classList.remove('show');
-        aiResponse.innerHTML = "Something went wrong!";
-    } finally {
-        // Reset button state
-        button.disabled = false;
-        button.classList.remove('pulse');
-        spinner.style.display = 'none';
-    }
-}
-
-document.getElementById("addPatientAi").addEventListener("click", Ai_run);
 
 
 

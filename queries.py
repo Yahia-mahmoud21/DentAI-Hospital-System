@@ -19,17 +19,17 @@ def get_bach():
 
 
 
-def insert_cases(name, age, gender, phone, sick):
+def insert_cases(name, age, gender, phone):
     try:
         conn = sqlite3.connect("dental_project_DB.db")
         cursor = conn.cursor()
         batch = get_bach()
         cursor.execute(
             """
-            INSERT INTO cases (batch_id, name, age, gender, phone, sick)
-            VALUES (?, ?, ? , ?, ?, ?);
+            INSERT INTO cases (batch_id, name, age, gender, phone)
+            VALUES (?, ?, ? , ?, ?);
             """,
-            (batch , name, age, gender, phone, sick)
+            (batch , name, age, gender, phone)
         )
         conn.commit()
 

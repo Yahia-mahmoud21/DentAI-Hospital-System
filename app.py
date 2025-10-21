@@ -1,19 +1,20 @@
 from fastapi import FastAPI, Request,Form, File, UploadFile
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse, HTMLResponse, StreamingResponse
 from pydantic import BaseModel
 from fastapi.templating import Jinja2Templates
 import uvicorn
 import sqlite3
 from queries import *
 from PIL import Image
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStreamer
 import torch
 import torchvision.transforms as transforms
 from model import RegularizedDentalClassifier
 import os
 import io
 import uuid
+from threading import Thread
 from Student_Page_Queries import *
 from doctor_query import *
 from college_queries import *
@@ -52,6 +53,10 @@ def doctor(request: Request):
         "doctor_all.html", {"request": request, "departments": departments}
     )
 
+@app.get("/AI", response_class=HTMLResponse)
+def AI(request: Request):
+    return templates.TemplateResponse("Ai.html", {"request": request})
+
 @app.get("/college", response_class=HTMLResponse)
 def collge(request: Request):
     return templates.TemplateResponse("college.html", {"request": request})
@@ -59,6 +64,11 @@ def collge(request: Request):
 @app.get("/patient", response_class=HTMLResponse)
 def patient(request: Request):
     return templates.TemplateResponse("patient.html", {"request": request})
+
+
+@app.get("/book", response_class=HTMLResponse)
+def book(request: Request):
+    return templates.TemplateResponse("book.html", {"request": request})
 
 
 
@@ -274,15 +284,14 @@ class GetCaseData(BaseModel):
     patientAge: int
     gender: str
     phoneNumber: str
-    sick : str
     
 
 @app.post("/api/v1/home/case")
 def get_cases_data_regestration(data: GetCaseData):
-    print(data.patientName, data.patientAge, data.gender,data.phoneNumber, data.sick)
+    print(data.patientName, data.patientAge, data.gender,data.phoneNumber)
 
     try:
-        insert_cases(data.patientName, int(data.patientAge), data.gender, data.phoneNumber, data.sick)
+        insert_cases(data.patientName, int(data.patientAge), data.gender, data.phoneNumber)
 
         return {
                 "success": True,
@@ -292,6 +301,73 @@ def get_cases_data_regestration(data: GetCaseData):
          print(f"Database error: {e}")
          return {"success": False, "message": "Server error, please try again"}
 
+
+
+# get case data from home page 
+class updateCaseData(BaseModel):
+    editpatientID: str
+    editpatientName: str
+    editpatientAge: int
+    editgender: str
+    editphoneNumber: str
+
+
+@app.post("/api/v1/home/edit/case")
+def update_book_case(data: updateCaseData):
+    print(data.editpatientID, data.editpatientName, data.editpatientAge, data.editgender,data.editphoneNumber)
+
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""                                      
+                    UPDATE cases 
+                    set name = ?,
+                    age = ?, 
+                    phone = ?, 
+                    gender = ? 
+                    where case_id = ?; 
+  """, (data.editpatientName, int(data.editpatientAge), data.editphoneNumber,data.editgender, data.editpatientID ))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+
+        return {
+                "success": True,
+                "message": "Data Added successful"
+            }
+    except sqlite3.Error as e:
+         print(f"Database error: {e}")
+         return {"success": False, "message": "Server error, please try again"}
+
+
+@app.get("/api/home/show/cases")
+def show_patients():
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("""  
+                  SELECT c.case_id, c.name, c.age, c.phone, c.gender, sc.appointment_date, sc.appointment_time
+                from cases c 
+                join student_department_cases sc
+                on sc.case_id = c.case_id
+                where sc.student_id is NULL
+                ORDER by c.case_id DESC;
+
+  """)
+        
+        rows = cursor.fetchall()
+        conn.close()
+
+        patients = [dict(row) for row in rows]
+        return {"success": True, "patients": patients}
+    except sqlite3.Error as e:
+        print('database error : ', e )
+        return {"success": False}
 
    
 
@@ -522,70 +598,65 @@ async def edit_case(
 
 
 
+# model_name = "SciReason-LFM2-2.6B"
 
-model_path = "SciReason-LFM2-2.6B"
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# model = AutoModelForCausalLM.from_pretrained(
+#     model_name,
+#     device_map="auto",
+#     torch_dtype=torch.float16
+# )
+# model.eval()
 
-tokenizer = AutoTokenizer.from_pretrained(model_path)
-model = AutoModelForCausalLM.from_pretrained(
-    model_path,
-    torch_dtype=torch.float16,   # دقة نصفية لتقليل استهلاك VRAM
-    device_map="auto",           # يوزع الموديل تلقائيًا على الـ GPU
-    low_cpu_mem_usage=True
-)
-model.eval()
+# class AiDiagnosis(BaseModel):
+#     prompt: str
 
-class AiDiagnosis(BaseModel):
-    age: int
-    sick: str
+# def build_prompt(prompt):
+#     return prompt
 
-def build_prompt(age, sick):
-    return f"""
-You are an experienced dental doctor.
-A patient is {age} years old and reports the following issue: "{sick}".
-Please provide:
-1. The most likely dental diagnosis.
-2. Possible related conditions.
-3. Brief explanation.
-4. Suggested examinations or next steps.
-"""
+# @app.post("/api/ai/diagnosis/stream")
+# def ai_diagnosis_stream(data: AiDiagnosis):
+#     messages = [
+#         {"role": "user", "content": build_prompt(data.prompt)}
+#     ]
 
-@app.post("/api/ai/diagnosis")
-def Ai_diagnosis(data: AiDiagnosis):
-    print("Age:", data.age, "Sick:", data.sick)
+#     # تجهيز الإدخال
+#     inputs = tokenizer.apply_chat_template(
+#         messages,
+#         add_generation_prompt=True,
+#         tokenize=True,
+#         return_tensors="pt",
+#         return_dict=True
+#     ).to(model.device)
 
-    messages = [
-        {"role": "user", "content": build_prompt(data.age, data.sick)}
-    ]
+#     # Streamer لإخراج التوكنات أثناء التوليد
+#     streamer = TextIteratorStreamer(
+#         tokenizer,
+#         skip_prompt=True,
+#         skip_special_tokens=True
+#     )
 
-    inputs = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        tokenize=True,
-        return_dict=True,
-        return_tensors="pt"
-    ).to(model.device)
+#     # تشغيل التوليد في Thread منفصل
+#     generation_thread = Thread(
+#         target=model.generate,
+#         kwargs=dict(
+#             **inputs,
+#             max_new_tokens=800,
+#             do_sample=True,
+#             temperature=0.7,
+#             top_p=0.9,
+#             streamer=streamer
+#         )
+#     )
+#     generation_thread.start()
 
-    with torch.inference_mode():
-        outputs = model.generate(
-            **inputs,
-            max_new_tokens=800,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9
-        )
+#     # دالة generator تبعت التوكنات لحظة بلحظة
+#     def token_stream():
+#         for new_text in streamer:
+#             yield new_text  # 👈 كل توكن يتبعت أول بأول
 
-    response_text = tokenizer.decode(
-        outputs[0][inputs["input_ids"].shape[-1]:],
-        skip_special_tokens=True
-    )
-
-    print("AI Response:", response_text)
-
-    return {
-        "AI_response": response_text,
-        "success": True,
-        "message": "Data Added successful"
-    }
+#     # إرجاع StreamResponse للـ frontend
+#     return StreamingResponse(token_stream(), media_type="text/plain")
 
 
 def model_classification(image_path):
