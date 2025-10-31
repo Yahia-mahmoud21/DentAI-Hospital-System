@@ -1,0 +1,3774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #FAFBFC;
+            overflow-x: hidden;
+        }
+
+        /* CSS Custom Properties */
+        :root {
+            --primary-blue: #007BFF;
+            --primary-blue-light: #F0F7FF;
+            --primary-blue-dark: #0056B3;
+            --success-green: #28A745;
+            --danger-red: #DC3545;
+            --warning-yellow: #FFC107;
+            --light-gray: #F8F9FA;
+            --medium-gray: #6C757D;
+            --dark-gray: #343A40;
+            --sidebar-collapsed: 60px;
+            --sidebar-expanded: 240px;
+            --patient-queue-width: 304px;
+        }
+
+         /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-collapsed);
+            background: var(--light-gray);
+            border-right: 1px solid #E9ECEF;
+            z-index: 1000;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #E9ECEF;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar.expanded .sidebar-header {
+            justify-content: flex-start;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .logo {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar-nav {
+            padding: 50px 0;
+        }
+
+        .sidebar-item {
+            position: relative;
+            margin: 30px 15px;
+            cursor: pointer;
+        }
+
+        .sidebar-icon {
+            
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            height: 38px;
+            border-radius: 12px;
+            font-size: 21px;
+            color: var(--medium-gray);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            
+        }
+
+        .sidebar-icon:hover {
+            transform: scale(1.05);
+            background-color: rgba(0, 123, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .sidebar-icon.active {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transform: translateX(2px);
+        }
+
+        .sidebar-icon.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 0 2px 2px 0;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { height: 0; }
+            to { height: 100%; }
+        }
+
+        .sidebar-text {
+            margin-left: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-text {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar.expanded .sidebar-icon {
+            justify-content: flex-start;
+            padding-left: 12px;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: var(--dark-gray);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: var(--dark-gray);
+        }
+
+        .sidebar:not(.expanded) .sidebar-item:hover .tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 28px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #E9ECEF;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--medium-gray);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        /* Patient Queue Panel */
+        .patient-queue {
+             position: fixed;
+            left: var(--sidebar-collapsed);
+            top: 0;
+            width: var(--patient-queue-width);
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #E9ECEF;
+            border-left: 1px solid #E9ECEF;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+
+        .sidebar.expanded + .patient-queue {
+            left: var(--sidebar-expanded);
+        }
+         .patient-queue.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+       
+        .queue-header {
+            padding: 24px;
+            border-bottom: 1px solid #E9ECEF;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .queue-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .queue-subtitle {
+            font-size: 14px;
+            color: var(--medium-gray);
+        }
+
+        .patient-list {
+            padding: 16px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .patient-card {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: 1px solid #E9ECEF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+        }
+
+        .patient-card.active {
+            border: 2px solid var(--primary-blue);
+            background: var(--primary-blue-light);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .patient-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 18px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .patient-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+        }
+
+        .patient-date {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--success-green);
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: calc(var(--sidebar-collapsed) );
+            padding: 24px;
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.expanded ~ .main-content {
+            margin-left: calc(var(--sidebar-expanded) );
+        }
+
+        /* Main content adjustments when patient queue is shown */
+        .main-content.with-patient-queue {
+            margin-left: calc(var(--sidebar-collapsed) + var(--patient-queue-width));
+        }
+
+        .sidebar.expanded ~ .main-content.with-patient-queue {
+            margin-left: calc(var(--sidebar-expanded) + var(--patient-queue-width));
+        }
+
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .page-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Page Headers */
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-left: 16px;
+        }
+
+        .page-header i {
+            font-size: 32px;
+            color: var(--primary-blue);
+        }
+
+        /* Patient Details Header */
+        .patient-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .patient-header-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 32px;
+            margin-right: 24px;
+        }
+
+        .patient-header-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .member-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            gap: 24px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .content-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary-blue);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .form-value {
+            font-size: 16px;
+            color: var(--dark-gray);
+            padding: 8px 0;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: var(--primary-blue); }
+        .stat-icon.green { background: var(--success-green); }
+        .stat-icon.orange { background: #FF9800; }
+        .stat-icon.purple { background: #9C27B0; }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--medium-gray);
+            font-weight: 500;
+        }
+
+        /* Calendar styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #E9ECEF;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 16px;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            background: #F8F9FA;
+            color: #CED4DA;
+        }
+
+        .calendar-day.today {
+            background: var(--primary-blue-light);
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .calendar-event {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--dark-gray);
+            border: 1px solid #E9ECEF;
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1199px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-field.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+            }
+            
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+            
+            .patient-queue {
+                left: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .patient-queue.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+        }
+         /* Dental History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--light-gray);
+            color: var(--medium-gray);
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid #E9ECEF;
+        }
+
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #F1F3F4;
+            color: var(--dark-gray);
+        }
+
+        .history-table tr:hover {
+            background: var(--light-gray);
+        }
+
+        .payment-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .payment-status.paid {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .payment-status.pending {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .payment-status.overdue {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+         .table-container {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.2s ease;
+        }
+
+        tr:hover {
+            background: #eff6ff;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tr:nth-child(even):hover {
+            background: #eff6ff;
+        }
+
+        /* Attendance Rate */
+        .attendance-rate {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+        }
+
+        .status-dot.high {
+            background: #10b981;
+        }
+
+        .status-dot.medium {
+            background: #f59e0b;
+        }
+
+        .status-dot.low {
+            background: #ef4444;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .status-icon.good {
+            color: #10b981;
+        }
+
+        .status-icon.warning {
+            color: #ef4444;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.view {
+            color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .action-btn.view:hover {
+            background: #dbeafe;
+        }
+
+        .action-btn.edit {
+            color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .action-btn.edit:hover {
+            background: #d1fae5;
+        }
+        /* Modal Styles */
+       .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.226);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease-out;
+    overflow: auto; /* ✅ يخلي المودال نفسه يعمل scroll */
+
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+}
+
+      
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+        .modal-content {
+            background: white;
+    border-radius: 1.5rem;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh; /* ✅ يحدّد أقصى ارتفاع */
+    overflow-y: auto; /* ✅ يخلي المحتوى الداخلي يعمل scroll */
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #6b7280;
+        }
+
+        .close-btn.std {
+            margin-bottom: 10px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn.std:hover {
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+       
+
+        .form-group .img {
+                width: 100%;             /* تاخد العرض بالكامل */
+                max-height: 250px;       /* متعديش الطول ده */
+                object-fit: contain;     /* تحافظ على الأبعاد */
+                border-radius: 0.75rem;  /* زوايا ناعمة */
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* ظل خفيف */
+                margin-top: 0.5rem;
+                display: block;
+            }
+
+            .img:hover {
+    transform: scale(1.02);
+}
+
+/* المودال اللي هيعرض الصورة */
+.image-modal {
+    display: none; /* مخفي في الأول */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.image-modal.active {
+    display: flex;
+}
+
+.image-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 1rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+/* زرار قفل */
+.image-modal .close-image {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .d-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            height: 70px;
+        }
+
+        .d-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: #1d4ed8;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        }
+
+       .photo-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #6f99f3;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .photo-btn:hover {
+    background: #1d4ed8;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  /* لما يتحمل الملف */
+  .photo-btn.uploaded {
+    background: #28a745 !important; /* أخضر */
+    color: #fff !important;
+  }
+                    
+        .approval-ok {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #D4EDDA;
+            color: #155724;
+            margin: 25px;
+            }
+
+            .approval-pending {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #FFF3CD;
+            color: #856404;
+            margin: 20px;
+            }
+
+            .approval-no {
+           display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #F8D7DA;
+            color: #971825;
+            margin: 25px;
+
+
+            }
+            .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            height: 50px;
+            }
+
+            .form-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            }
+
+            /* Modern Filter Styles */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    padding: 2rem;
+    border-radius: 20px;
+    
+    backdrop-filter: blur(10px);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.filters::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.filters > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* Search Input */
+#searchName {
+    flex: 1;
+    min-width: 280px;
+    padding: 1rem 1.5rem;
+    padding-left: 3.5rem;
+    border: none;
+    border-radius: 50px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2d3748;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+#searchName::placeholder {
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+#searchName:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.15),
+        0 0 0 3px rgba(102, 126, 234, 0.3),
+        0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+    transform: translateY(-2px);
+}
+
+/* Search Icon */
+#searchName::before {
+    content: '🔍';
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    opacity: 0.6;
+}
+
+/* Date Filter Container */
+.date-filter-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.date-filter-container:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Select Dropdown */
+#dateFilterType {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2d3748;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 140px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+}
+
+#dateFilterType:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+#dateFilterType:focus {
+    outline: none;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.2),
+        0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* Date Inputs */
+#filterDate,
+#filterYear,
+#filterMonth {
+    padding: 0.75rem 1.25rem;
+    border: none;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #2d3748;
+    font-size: 0.9rem;
+    font-weight: 500;
+    min-width: 150px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+#filterDate:hover,
+#filterYear:hover,
+#filterMonth:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+}
+
+#filterDate:focus,
+#filterYear:focus,
+#filterMonth:focus {
+    outline: none;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.2),
+        0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+#filterYear::placeholder {
+    color: #a0aec0;
+    font-weight: 400;
+}
+
+/* Calendar and Clock Icons for Date Inputs */
+#filterDate {
+    position: relative;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: 3rem;
+}
+
+#filterMonth {
+    position: relative;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: 3rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .filters {
+        flex-direction: column;
+        gap: 1.25rem;
+        padding: 1.5rem;
+    }
+    
+    #searchName {
+        min-width: 100%;
+        width: 100%;
+    }
+    
+    .date-filter-container {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    #dateFilterType,
+    #filterDate,
+    #filterYear,
+    #filterMonth {
+        min-width: 120px;
+        flex: 1;
+    }
+}
+
+@media (max-width: 480px) {
+    .date-filter-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    #dateFilterType,
+    #filterDate,
+    #filterYear,
+    #filterMonth {
+        width: 100%;
+        min-width: unset;
+    }
+}
+
+/* Loading Animation */
+.filters::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+   
+    animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    50% {
+        left: 100%;
+    }
+    100% {
+        left: 100%;
+    }
+}
+
+/* Custom Scrollbar for Select Options */
+select::-webkit-scrollbar {
+    width: 8px;
+}
+
+select::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+select::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Focus Visible for Accessibility */
+.filters input:focus-visible,
+.filters select:focus-visible {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+
+    
+    #searchName::placeholder {
+        color: #718096;
+    }
+    
+         .studentModal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        
+
+        .student-modal-content {
+            background-color: #f9f9f9;
+            margin: 15% auto;
+            padding: 30px;
+            border: none;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .student-modal-header {
+            margin-bottom: 20px;
+        }
+
+        .student-modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .radio-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .radio-group label {
+            display: block;
+            margin: 10px 0;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+            text-decoration: none;
+        }
+
+        /* Button Styles */
+        .btn-approval {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-approval:hover {
+            background-color: #218838;
+        }
+
+        .btn-cases {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-cases:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-bottom: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-back:hover {
+            background-color: #545b62;
+        }
+
+        .btn-submit {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-submit:hover {
+            background-color: #218838;
+        }
+
+        .btn-cancel {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background-color: #c82333;
+        }
+
+        /* Cases Page Styles */
+        #casesPage {
+            display: none;
+        }
+
+        .page-title {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">MedDash</div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="sidebar-item">
+                <div class="sidebar-icon active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </div>
+                <div class="tooltip">Dashboard</div>
+            </div>
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="patients">
+                    <i class="fas fa-users"></i>
+                    <span class="sidebar-text">Patients</span>
+                </div>
+                <div class="tooltip">Patients</div>
+            </div>
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="students">
+                    <i class="fa-solid fa-user-doctor"></i>
+                    <span class="sidebar-text">Students</span>
+                </div>
+                <div class="tooltip">Patients</div>
+            </div>
+             <div class="sidebar-item">
+                <div class="sidebar-icon">
+                    <a href="/AI" target="_blank" style="text-decoration: none;">
+                        <i class="fa-solid fa-brain"></i>
+                        <span class="sidebar-text">AI Models</span>
+                    </a>
+                </div>
+               
+            </div>
+            <!-- <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span class="sidebar-text">Calendar</span>
+                </div>
+                <div class="tooltip">Calendar</div>
+            </div>
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="sidebar-text">Reports</span>
+                </div>
+                <div class="tooltip">Reports</div> 
+            </div>-->
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span class="sidebar-text">Settings</span>
+                </div>
+                <div class="tooltip">Settings</div>
+            </div>
+        </div>
+        <div class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    </nav>
+
+    <!-- Patient Queue Panel -->
+    <div class="patient-queue" id="patientQueue">
+  <div class="queue-header">
+    <div class="queue-title">Patient Queue</div>
+    <div class="queue-subtitle" id="queueCount">0 patients today</div>
+  </div>
+  <div class="patient-list" id="patientList">
+    <!-- cards get inserted here -->
+  </div>
+</div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="page-section active">
+             <div class="page-header">
+              <i class="fa-solid fa-circle-user"></i>
+                <h1 id="DoctorName"></h1>
+            </div>
+            <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">ID</div>
+                                <div class="form-value" id="DoctorID"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Title</div>
+                                <div class="form-value" id="DoctorTitle"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department ID</div>
+                                <div class="form-value" id="DoctorDepID"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department</div>
+                                <div class="form-value" id="DoctorDepName"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department Manager</div>
+                                <div class="form-value" id="DoctorDepManager"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <div class="form-value" id="DoctorEmail"></div>
+                            </div>
+                        </div>
+                    </div>
+           
+            
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Total Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Today's Appointments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Pending Approvals</div>
+                </div>
+                
+            </div>
+
+           <!-- Dental History -->
+        <div id="feedback" class="content-section">
+            
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <div class="filters">
+                    <input type="text" id="searchName" placeholder="Search by name...">
+                    <div class="date-filter-container">
+   
+</div>
+                     </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>description</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackTable">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- View Feedback Modal -->
+       <!-- View Feedback Modal -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">View Patient</h4>
+      <button class="close-btn" onclick="closeModal('viewModal')">&times;</button>
+    </div>
+
+    <form>
+      <div class="form-group">
+        <label  class="form-label">Case ID</label>
+        <input type="text" class="form-input" id="viewPatientid" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="before-upload">Before Photo</label>
+        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="previewImg">
+        </div>
+
+        <!-- مودال الصورة -->
+        <div class="image-modal" id="imageModal">
+            <span class="close-image" id="closeImage">&times;</span>
+            <img id="modalImg" src="">
+        </div>
+
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea type="text" class="d-input" id="viewdescription" readonly ></textarea>
+      </div>
+
+      <div class="form-group after_view">
+        <label class="form-label" for="after-upload">after Photo</label>
+        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="previewImgAfter">
+        </div>
+
+      <div class="form-group treatment_view">
+        <label class="form-label">treatment</label>
+        <textarea type="text" class="d-input" id="viewTreatment" readonly></textarea>
+      </div>
+
+      <div class="form-group department_view">
+        <label class="form-label">department</label>
+        <input type="text" class="form-input" id="viewDepartment" readonly>
+      </div>
+
+      <div class="form-group date_view">
+        <label class="form-label">date</label>
+        <input type="date" class="form-input" id="viewDate" readonly>
+      </div>
+
+      
+    </form>
+  </div>
+</div>
+
+<!-- Edit Feedback Modal -->
+<!-- <div id="editModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">Edit Patient</h4>
+      <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+    </div>
+
+    <form onsubmit="event.preventDefault(); savePatient();">
+      <div class="form-group">
+        <label class="form-label">Case Id</label>
+        <input type="text" class="form-input" id="editPatientName">
+      </div>
+
+     <div class="form-group">
+  <label class="photo-btn" for="before-upload" data-default="Upload Before Photo">
+    Upload Before Photo
+  </label>
+  <input type="file" name="photo" id="before-upload">
+</div>
+
+
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea  type="" class="d-input" id="editPatientdis"></textarea>
+      </div>
+
+      
+   <div class="form-group after">
+  <label class="photo-btn" for="after-upload" data-default="Upload After Photo">
+    Upload After Photo
+  </label>
+  <input type="file" name="photo" id="after-upload">
+</div>
+
+      <div class="form-group treatment">
+        <label class="form-label">Treatment</label>
+        <textarea type="text" class="d-input" id="edittreatment"></textarea>
+      </div>
+
+    
+
+
+      <button type="submit" class="save-btn">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div> -->
+
+        </div>
+
+
+        <!-- <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editModal')">&times;</span>
+            <h2>Edit Feedback</h2>
+            <label>Student:</label>
+            <input type="text" id="editStudent" readonly><br><br>
+            <label>Feedback:</label>
+            <textarea id="editFeedback" rows="4" cols="40"></textarea><br><br>
+            <label>Instructor:</label>
+            <input type="text" id="editInstructor"><br><br>
+            <button onclick="saveFeedback()">Save</button>
+        </div>
+        </div> -->
+
+        </div>
+                
+           
+
+
+
+
+
+
+
+
+
+
+ </section>
+
+
+
+
+
+
+<!--  ######################  student_patient ##############################-->
+
+
+
+        <!-- Patients Section -->
+        <section id="patients" class="page-section">
+            <!-- Patient Header -->
+            <div class="patient-header">
+                <div class="patient-header-avatar"></div>
+                <div class="patient-header-info">
+                    <h1></h1>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="content-column">
+                    <!-- Basic Information -->
+                   <div class="info-card">
+                       
+<form onsubmit="return postEditCase(event)">
+      <div class="form-group">
+        <label  class="form-label">Case ID</label>
+        <input type="text" class="form-input" id="docPatientid" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="before-upload">Before Photo</label>
+        <img src="" class="img" id="docbeforeImg">
+    </div>
+
+        <!-- مودال الصورة -->
+        
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea type="text" class="d-input" id="docviewdescription"  ></textarea>
+      </div>
+
+       <div class="image-modal" id="docimageModal">
+            <span class="close-image" id="closeImage">&times;</span>
+            <img id="docmodalImg" src="">
+        </div>
+
+      <div class="form-group after_doc">
+        <label class="form-label" for="after-upload">after Photo</label>
+        <img src="" class="img" id="docafterImg">
+    </div>
+
+       <div class="form-group treatment_doc">
+        <label class="form-label">treatment</label>
+        <textarea type="text" class="d-input" id="docviewdtreatment"  ></textarea>
+      </div>
+
+    <div class="form-group dep">
+    <label class="form-label">Department</label>
+    <select class="form-select" id="docViewDepartment">
+        {% for dep in departments %}
+            <option value="{{ dep }}">{{ dep }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+    <div class="form-group treatment_doc">
+        <label class="form-label">Notes</label>
+        <textarea type="text" class="d-input" id="docviewNotes"  ></textarea>
+      </div>
+
+
+     
+
+      
+
+      <div class="form-group">
+                    <label class="form-label">Student approval</label>
+                    <div class="radio-group">
+                        <label class="radio-option">
+                            <input type="radio" name="attendance"  value="1" checked>
+                            <span>approve</span>
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="attendance"  value="0">
+                            <span>reject</span>
+                        </label>
+                    </div>
+                </div>
+
+       <button type="submit" class="save-btn">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+
+
+    </form>
+                        </div>
+                    </div>
+
+                    <!-- Medical History -->
+                    
+                </div>
+
+                <!-- Right Column -->
+                <!-- <div class="content-column">
+                    
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-bolt"></i>
+                            Quick Actions
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn primary">
+                                <i class="fas fa-plus"></i>
+                                Schedule Appointment
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-edit"></i>
+                                Update Information
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-medical"></i>
+                                Add Treatment Note
+                            </button>
+                        </div>
+                    </div> -->
+
+                    <!-- Insurance Info -->
+                    <!-- <div class="info-card" style="background: linear-gradient(135deg, #6F42C1 0%, #8A63D2 100%); color: white;">
+                        <div class="card-title" style="color: white;">
+                            <i class="fas fa-shield-alt" style="color: white;"></i>
+                            Insurance Information
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; margin-bottom: 8px;">Policy #: HC-2024-789456</div>
+                            <div>Provider: HealthCare Plus</div>
+                            <div>Status: Active Coverage</div>
+                        </div>
+                    </div> -->
+                </div>
+            </div>
+        </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+         
+    <section id="students" class="page-section">
+        <div id="approvment" class="content-section">
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <div class="filters">
+                        <input type="text" id="searchName" placeholder="Search by name...">
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Cases count</th>
+                                <th>Approval</th>
+                                <th>Cases</th>
+                            </tr>
+                        </thead>
+                        <tbody id="StudentApproval">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+    <form>
+    
+    
+      
+    </form>
+  </div>
+  
+</div>
+        </div>
+
+        <!-- Cases Page (hidden by default) -->
+        <div id="casesPage" class="content-section">
+    <button class="btn-back" onclick="showStudentsTable()">Back to Students</button>
+    <h2 class="page-title">Cases for Student ID: <span id="currentStudentId"></span></h2>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Case ID</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Approval</th>
+                        <th>View</th>
+                    </tr>
+                </thead>
+                <tbody id="casesTableBody">
+                    <!-- Cases will be populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+<!-- Case View Modal -->
+
+    </section>
+
+    <!-- Approval Modal -->
+    <div id="approvalModal" class="studentModal">
+        <div class="student-modal-content">
+            <div class="student-modal-header">
+                 <span><button class="close-btn std" onclick="closeModal('approvalModal')">&times;</button></span>
+                <h3>Student Approval</h3>
+                <p>Student ID: <span id="modalStudentId"></span></p>
+            </div>
+            <div class="radio-group">
+                <label>
+                    <input type="radio" name="approval" value="approve">
+                    Approve Round
+                </label>
+                <label>
+                    <input type="radio" name="approval" value="not-approve">
+                    Not Approve Round
+                </label>
+            </div>
+            <div>
+                <button class="btn-submit" onclick="submitApproval()">Submit</button>
+                <button class="btn-cancel" onclick="closeModal('approvalModal')">Cancel</button>
+            </div>
+        </div>
+    </div>
+<div id="caseViewModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('caseViewModal')">&times;</span>
+        <h3>Case Details</h3>
+           <div class="form-group">
+        <label  class="form-label">Case ID</label>
+        <input type="text" class="form-input" id="casePatientid" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="before-upload">Before Photo</label>
+        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="casebeforeImg">
+    </div>
+
+        <!-- مودال الصورة -->
+        
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea type="text" class="d-input" id="caseviewdescription"  ></textarea>
+      </div>
+
+       <div class="image-modal" id="caseimageModal">
+            <span class="close-image" id="closeImage">&times;</span>
+            <img id="docmodalImg" src="">
+        </div>
+
+      <div class="form-group case_after">
+        <label class="form-label" for="after-upload">after Photo</label>
+        <img src="00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg" class="img" id="caseafterImg">
+    </div>
+
+       <div class="form-group case_treatment">
+        <label class="form-label">treatment</label>
+        <textarea type="text" class="d-input" id="caseviewdtreatment"  ></textarea>
+      </div>
+       <div class="form-group case_department">
+        <label  class="form-label">Department</label>
+        <input type="text" class="form-input" id="caseviewDepartment" readonly>
+      </div>
+
+
+    </div>
+
+    
+</div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- Calendar Section -->
+        <section id="calendar" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-calendar-alt"></i>
+                <h1>Appointment Calendar</h1>
+            </div>
+
+            
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-clock"></i>
+                            Today's Schedule
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="padding: 12px; border-left: 4px solid var(--primary-blue); background: var(--primary-blue-light);">
+                                <div style="font-weight: 600;">2:30 PM - Sarah Johnson</div>
+                                <div style="color: var(--medium-gray); font-size: 14px;">Dental Cleaning</div>
+                            </div>
+                            <div style="padding: 12px; border-left: 4px solid var(--success-green); background: #D4EDDA;">
+                                <div style="font-weight: 600;">4:00 PM - Mike Chen</div>
+                                <div style="color: var(--medium-gray); font-size: 14px;">Follow-up Consultation</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-chart-bar"></i>
+                <h1>Reports & Analytics</h1>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number">89%</div>
+                    <div class="stat-label">Patient Satisfaction</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">+15%</div>
+                    <div class="stat-label">Monthly Growth</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-procedures"></i>
+                    </div>
+                    <div class="stat-number">342</div>
+                    <div class="stat-label">Treatments Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-number">4.8</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Treatment Distribution
+                        </div>
+                        <p>Breakdown of different treatment types and their frequency over the selected period.</p>
+                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Dental Cleaning</span>
+                                <span style="font-weight: 600;">45%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Root Canal</span>
+                                <span style="font-weight: 600;">25%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Filling</span>
+                                <span style="font-weight: 600;">20%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Other</span>
+                                <span style="font-weight: 600;">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-download"></i>
+                            Export Reports
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-pdf"></i>
+                                Monthly Report (PDF)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-excel"></i>
+                                Patient Data (Excel)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-csv"></i>
+                                Financial Summary (CSV)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-cog"></i>
+                <h1>System Settings</h1>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user-cog"></i>
+                            Profile Settings
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">Full Name</div>
+                                <input type="text" value="Dr. Sarah Medical" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <input type="email" value="dr.sarah@clinic.com" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field full-width">
+                                <div class="form-label">Clinic Address</div>
+                                <input type="text" value="123 Medical Center, Health City" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button class="action-btn primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-bell"></i>
+                            Notification Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>Email notifications for new appointments</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>SMS reminders for patients</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" style="width: 18px; height: 18px;">
+                                <span>Weekly summary reports</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Security Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-mobile-alt"></i>
+                                Setup 2FA
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-history"></i>
+                                Login History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-palette"></i>
+                            Appearance
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="form-field">
+                                <div class="form-label">Theme</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>Light Mode</option>
+                                    <option>Dark Mode</option>
+                                    <option>Auto</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Language</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>English</option>
+                                    <option>Arabic</option>
+                                    <option>French</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+
+        
+  // ============================================================
+// GLOBAL VARIABLES
+// ============================================================
+const urlParams = new URLSearchParams(window.location.search);
+const doctorID = urlParams.get("doctor_id");
+let department = "";
+let Cases = [];
+let currentStudentId1 = '';
+let currentCases = [];
+let currentStudentId = null;
+let editIndex = null;
+
+// ============================================================
+// SAMPLE DATA
+// ============================================================
+const students = [
+    { id: 'S001', name: 'John Doe', casesCount: 5 },
+    { id: 'S002', name: 'Jane Smith', casesCount: 3 },
+];
+
+const casesData = {
+    'S001': [
+        { 
+            id: 'C001', 
+            description: 'Database Issue', 
+            approval: 'Approved', 
+            date: '2024-01-15', 
+            before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", 
+            after: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
+            treatment: "Panadol" 
+        },
+    ],
+    'S002': [
+        { 
+            id: 'C006', 
+            description: 'Email Configuration', 
+            approval: 'Rejected', 
+            date: '2024-01-13',
+            before: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg", 
+            after: "00cf39c1-Karaptiyan_Robert_50yo_13032021_185908_jpg.rf.98b2e72cb9a26e75d40df97e04473ada.jpg",
+            treatment: "Panadol"
+        },
+    ]
+};
+
+const process = [
+    // { 
+    //     ID: "1", 
+    //     name: "Sayed", 
+    //     description: "Excellent performance in AI fundamentals. Shows great potential.", 
+    //     treatment: "panadol", 
+    //     before: "url.png", 
+    //     after: "url.png", 
+    //     depart: "unknown",
+    //     date: "2005-08-08", 
+    //     approval: "pending" 
+    // },
+    // { 
+    //     ID: "2", 
+    //     name: "Ahmed", 
+    //     description: "Good progress but needs more practice with machine learning algorithms.",
+    //     treatment: "panadol", 
+    //     before: "url.png", 
+    //     after: "url.png", 
+    //     depart: "unknown",
+    //     date: "2005-08-08", 
+    //     approval: "approved"  
+    // },
+    // { 
+    //     ID: "3", 
+    //     name: "Ahmed", 
+    //     description: "Good progress but needs more practice with machine learning algorithms.",
+    //     treatment: "panadol", 
+    //     before: "url.png", 
+    //     after: "url.png", 
+    //     depart: "diagnosis", 
+    //     date: "2025-03-15", 
+    //     approval: "rejected"  
+    // },
+    // { 
+    //     ID: "4", 
+    //     name: "Sara", 
+    //     description: "Excellent performance in diagnostics.",
+    //     treatment: "aspirin", 
+    //     before: "url.png", 
+    //     after: "url.png", 
+    //     depart: "diagnosis", 
+    //     date: "2024-08-20", 
+    //     approval: "approved" 
+    // },
+];
+
+const student_patient = {
+    'sarah-johnson': {
+        avatar: 'SJ',
+        name: 'Sarah Johnson',
+        badge: 'Premium Member',
+        info: {
+            gender: 'Female',
+            dob: 'March 15, 1985',
+            phone: '(555) 123-4567',
+            email: 'sarah.johnson@email.com',
+            address: '123 Main Street, New York, NY 10001',
+            emergency: 'John Johnson - (555) 987-6543'
+        },
+        insurance: {
+            policy: 'HC-2024-789456',
+            expires: 'December 31, 2024',
+            provider: 'HealthCare Plus',
+            status: 'Active Coverage'
+        }
+    },
+    'mike-chen': {
+        avatar: 'MC',
+        name: 'Mike Chen',
+        badge: 'Standard Member',
+        info: {
+            gender: 'Male',
+            dob: 'July 22, 1990',
+            phone: '(555) 234-5678',
+            email: 'mike.chen@email.com',
+            address: '456 Oak Avenue, Los Angeles, CA 90210',
+            emergency: 'Lisa Chen - (555) 876-5432'
+        },
+        insurance: {
+            policy: 'HC-2024-234567',
+            expires: 'June 30, 2024',
+            provider: 'MediCare Pro',
+            status: 'Active Coverage'
+        }
+    },
+};
+
+// ============================================================
+// API DATA LOADING FUNCTIONS
+// ============================================================
+async function load_doctor_data(doctorID) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/doctor/data/${doctorID}`);
+        const result = await response.json();
+
+        if (result.success) {
+            const doctor_data = result.data;
+            console.log("Doctor data:", doctor_data);
+            return doctor_data;
+        } else {
+            alert(result.message);
+            return null;
+        }
+    } catch (error) {
+        console.error("Error loading doctor data:", error);
+        alert("Error for fetch data");
+        return null;
+    }
+}
+
+async function set_doctor_data(doctorID) {
+    const doctor_data = await load_doctor_data(doctorID);
+
+    if (doctor_data) {
+        const setTextContent = (id, value) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = value || '';
+        };
+
+        setTextContent("DoctorName", doctor_data.name);
+        setTextContent("DoctorID", doctor_data.faculty_members_id);
+        setTextContent("DoctorDepID", doctor_data.department_id);
+        setTextContent("DoctorDepName", doctor_data.department_name);
+        setTextContent("DoctorEmail", doctor_data.email);
+        setTextContent("DoctorTitle", doctor_data.title);
+        setTextContent("DoctorDepManager", doctor_data.manager);
+
+        department = doctor_data.department_id || "";
+    }
+    return department;
+}
+
+async function load_doctor_student_cases(doctorID) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/v1/doctor/student/cases/${doctorID}`);
+        const result = await response.json();
+
+        if (result.success) {
+            Cases = result.data;
+            console.log("Doctor cases loaded:", Cases);
+            renderQueue();
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error("Error loading doctor data:", error);
+        alert("Error Loading cases");
+    }
+}
+
+
+
+async function postEditCase(event) {
+    event.preventDefault();
+    
+    try {
+        // ❶ جمع البيانات من الـ HTML
+        const case_id = document.getElementById("docPatientid").value;
+        const department_id = document.getElementById("DoctorDepID").innerText;
+        const description = document.getElementById("docviewdescription").value;
+        const treatment = document.getElementById("docviewdtreatment").value;
+        const department = document.getElementById("docViewDepartment").value;
+        const notes = document.getElementById("docviewNotes").value;
+        const selected = document.querySelector('input[name="attendance"]:checked');
+        const approval = selected ? selected.value : "-1";
+
+
+        // ❷ التحقق من البيانات قبل الإرسال
+        console.log("=== Debug: Form Data ===");
+        console.log("Case ID:", case_id);
+        console.log("Description:", description);
+        console.log("Treatment:", treatment);
+        console.log("Department:", department);
+        console.log("approval:", approval);
+        console.log("notes:", notes);
+
+        
+
+        
+        // ❺ إنشاء FormData
+        const formData = new FormData();
+        formData.append("case_id", case_id);
+        formData.append("department_id", department_id);
+        formData.append("description", description);
+        formData.append("treatment", treatment);
+        formData.append("department", department);
+        formData.append("approval", approval);
+        formData.append("notes", notes);
+        
+        
+
+        // ❻ طباعة محتويات FormData للتأكد
+        console.log("=== FormData Contents ===");
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, ":", value.name, `(${value.size} bytes)`);
+            } else {
+                console.log(key, ":", value);
+            }
+        }
+        console.log("========================");
+
+        // ❼ إرسال الطلب
+        console.log("Sending request...");
+        const response = await fetch("http://127.0.0.1:8000/api/v1/approve/case", {
+            method: "POST",
+            body: formData
+            // ⚠️ لا تضع headers يدوياً - المتصفح يضعها تلقائياً مع FormData
+        });
+
+        console.log("Response status:", response.status);
+
+        // ❽ معالجة الرد
+        const result = await response.json();
+        console.log("Response data:", result);
+
+        if (response.ok && result.success) {
+            alert("Case updated successfully!");
+            // يمكنك إضافة كود هنا لإعادة تحميل الصفحة أو إغلاق النموذج
+            // location.reload(); // مثال
+        } else {
+            alert("Failed: " + (result.message || "Unknown error"));
+        }
+
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("Something went wrong! Check console for details.");
+    }
+}
+
+
+
+
+// ============================================================
+// STUDENT CASES FUNCTIONS
+// ============================================================
+function showCasesForStudent(studentId) {
+    currentStudentId1 = studentId;
+    const currentStudentIdEl = document.getElementById('currentStudentId');
+    if (currentStudentIdEl) {
+        currentStudentIdEl.textContent = studentId;
+    }
+    populateCasesTable(studentId);
+    
+    const casesPage = document.getElementById('casesPage');
+    if (casesPage) {
+        casesPage.style.display = 'block';
+    }
+}
+
+function populateCasesTable(studentId) {
+    const tbody = document.getElementById('casesTableBody');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    const cases = casesData[studentId] || [];
+    currentCases = cases;
+    
+    cases.forEach((caseItem, index) => {
+        const row = document.createElement('tr');
+
+        let approvalClass = "";
+        if (caseItem.approval.toLowerCase() === "approved") {
+            approvalClass = "approval-ok";
+        } else if (caseItem.approval.toLowerCase() === "pending") {
+            approvalClass = "approval-pending";
+        } else if (caseItem.approval.toLowerCase() === "rejected") {
+            approvalClass = "approval-no";
+        }
+
+        row.innerHTML = `
+            <td><strong>${caseItem.id}</strong></td>
+            <td>${caseItem.description}</td>
+            <td>${caseItem.date}</td>
+            <td class="${approvalClass}">${caseItem.approval}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view" title="View Details" onclick="openViewModal1(${index})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+
+    if (cases.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="5" style="text-align: center;">No cases found for this student.</td>';
+        tbody.appendChild(row);
+    }
+}
+
+function openViewModal1(index) {
+    if (index < 0 || index >= currentCases.length) {
+        console.error('Invalid case index:', index);
+        return;
+    }
+
+    const caseItem = currentCases[index];
+    const modal = document.getElementById("caseViewModal");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value || '';
+            } else {
+                el.value = value || '';
+            }
+        }
+    };
+
+    if (department === "d001") {
+        setValue("casePatientid", caseItem.id);
+        setValue("casebeforeImg", caseItem.before);
+        setValue("caseviewdescription", caseItem.description);
+        setValue("caseviewDepartment", caseItem.treatment);
+
+        const treatmentGroup = document.querySelector(".form-group.case_treatment");
+        const afterGroup = document.querySelector(".form-group.case_after");
+        if (treatmentGroup) treatmentGroup.style.display = "none";
+        if (afterGroup) afterGroup.style.display = "none";
+    } else {
+        setValue("casePatientid", caseItem.id);
+        setValue("casebeforeImg", caseItem.before);
+        setValue("caseviewdescription", caseItem.description);
+        setValue("caseafterImg", caseItem.after);
+        setValue("caseviewdtreatment", caseItem.treatment);
+
+        const departmentGroup = document.querySelector(".form-group.case_department");
+        if (departmentGroup) departmentGroup.style.display = "none";
+    }
+}
+
+function showStudentsTable() {
+    const casesPage = document.getElementById('casesPage');
+    const approvment = document.getElementById('approvment');
+    
+    if (casesPage) casesPage.style.display = 'none';
+    if (approvment) approvment.style.display = 'block';
+}
+
+// ============================================================
+// APPROVAL MODAL FUNCTIONS
+// ============================================================
+function populateStudentsTable() {
+    const tbody = document.getElementById('StudentApproval');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${student.id}</td>
+            <td>${student.name}</td>
+            <td>${student.casesCount}</td>
+            <td>
+                <button class="btn-approval" onclick="openApprovalModal('${student.id}')">
+                    Approve
+                </button>
+            </td>
+            <td>
+                <button class="btn-cases" onclick="showCasesPage('${student.id}')">
+                    View Cases
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function openApprovalModal(studentId) {
+    currentStudentId = studentId;
+    const modalStudentId = document.getElementById('modalStudentId');
+    const approvalModal = document.getElementById('approvalModal');
+    
+    if (modalStudentId) modalStudentId.textContent = studentId;
+    if (approvalModal) approvalModal.style.display = 'block';
+    
+    const radioButtons = document.querySelectorAll('input[name="approval"]');
+    radioButtons.forEach(radio => radio.checked = false);
+}
+
+function submitApproval() {
+    const selectedOption = document.querySelector('input[name="approval"]:checked');
+    
+    if (!selectedOption) {
+        alert('Please select an approval option.');
+        return;
+    }
+
+    const approval = selectedOption.value;
+    const studentId = currentStudentId;
+    
+    console.log(`Student ${studentId} approval: ${approval}`);
+    alert(`Approval submitted for Student ${studentId}: ${approval === 'approve' ? 'Approved' : 'Not Approved'}`);
+    
+    closeModal('approvalModal');
+}
+
+function showCasesPage(studentId) {
+    const currentStudentIdEl = document.getElementById('currentStudentId');
+    if (currentStudentIdEl) {
+        currentStudentIdEl.textContent = studentId;
+    }
+    
+    populateCasesTable(studentId);
+    
+    const approvment = document.getElementById('approvment');
+    const casesPage = document.getElementById('casesPage');
+    
+    if (approvment) approvment.style.display = 'none';
+    if (casesPage) casesPage.style.display = 'block';
+}
+
+// ============================================================
+// PATIENT QUEUE MANAGEMENT
+// ============================================================
+function getInitials(name) {
+    return name.split(" ").map(n => n[0]).join("").toUpperCase();
+}
+
+function renderQueue() {
+    const patientList = document.getElementById("patientList");
+    const queueCount = document.getElementById("queueCount");
+
+    if (!patientList || !queueCount) {
+        console.error("Patient list or queue count elements not found");
+        return;
+    }
+
+    patientList.innerHTML = "";
+
+    Cases.forEach((patient, index) => {
+        const card = document.createElement("div");
+        card.className = "patient-card";
+        if (index === 0) card.classList.add("active");
+        card.dataset.patientId = patient.id;
+
+        card.innerHTML = `
+            <div class="patient-avatar">${getInitials(patient.name)}</div>
+            <div class="patient-info">
+                <div class="patient-name">${patient.name}</div>
+                <div class="patient-date">Case ID: ${patient.id}</div>
+            </div>
+        `;
+
+        // Add click event directly to card
+        card.addEventListener('click', function() {
+            // Remove active from all cards
+            document.querySelectorAll('.patient-card').forEach(c => c.classList.remove('active'));
+            // Add active to clicked card
+            card.classList.add('active');
+            // Load patient details into form
+            loadPatientDetails(patient.id);
+            
+            console.log("📋 Clicked patient:", patient.name, "ID:", patient.id);
+        });
+
+        patientList.appendChild(card);
+    });
+
+    queueCount.textContent = `${Cases.length} patients today`;
+}
+
+function loadPatientDetails(patientId) {
+    const patient = Cases.find(p => p.id === patientId);
+    
+    if (!patient) {
+        console.error("Patient not found:", patientId);
+        return;
+    }
+
+    console.log("🔍 Loading patient:", patient);
+
+    // Update patient header
+    const headerAvatar = document.querySelector(".patient-header-avatar");
+    const headerName = document.querySelector(".patient-header-info h1");
+    
+    if (headerAvatar) headerAvatar.textContent = getInitials(patient.name);
+    if (headerName) headerName.textContent = patient.name;
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value || '';
+                console.log(`🖼️ Set image ${id}:`, value);
+            } else {
+                el.value = value || '';
+                console.log(`📝 Set field ${id}:`, value);
+            }
+        } else {
+            console.warn(`⚠️ Element not found: ${id}`);
+        }
+    };
+
+    // Check if department is D001 (Diagnosis) or other departments
+    if (department === "d001") {
+        console.log("🏥 Loading for Diagnosis Department (D001)");
+        
+        setValue("docPatientid", patient.id);
+        setValue("docviewdescription", patient.description);
+        document.getElementById("docbeforeImg").src = `/static/uploads/${patient.before}`;
+        setValue("docViewDepartment", patient.department);
+        
+        // Hide treatment and after image fields for diagnosis department
+        const afterDoc = document.querySelector(".form-group.after_doc");
+        const treatmentDoc = document.querySelector(".form-group.treatment_doc");
+        if (afterDoc) afterDoc.style.display = "none";
+        if (treatmentDoc) treatmentDoc.style.display = "none";
+        
+        // Show department field
+        const depDoc = document.querySelector(".form-group.dep");
+        if (depDoc) depDoc.style.display = "block";
+        
+    } else {
+        console.log("🏥 Loading for Treatment Department");
+        
+        setValue("docPatientid", patient.id);
+        setValue("docviewdescription", patient.description);
+        document.getElementById("docbeforeImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("docafterImg").src = `/static/uploads/${patient.after}`;
+        setValue("docviewdtreatment", patient.treatment);
+        
+        // Hide department field for treatment departments
+        const dep = document.querySelector(".form-group.dep");
+        if (dep) dep.style.display = "none";
+        
+        // Show treatment and after image fields
+        const afterDoc = document.querySelector(".form-group.after_doc");
+        const treatmentDoc = document.querySelector(".form-group.treatment_doc");
+        if (afterDoc) afterDoc.style.display = "block";
+        if (treatmentDoc) treatmentDoc.style.display = "block";
+    }
+
+    // Update approval radio buttons
+    const approvalRadios = document.querySelectorAll('input[name="attendance"]');
+    approvalRadios.forEach(radio => {
+        radio.checked = false;
+        if ((radio.value === "true" && patient.approve === "approve") ||
+            (radio.value === "false" && patient.approve === "reject")) {
+            radio.checked = true;
+            console.log("✅ Approval set to:", patient.approve);
+        }
+    });
+
+    updateActiveCard(patientId);
+    
+    console.log("✅ Patient loaded successfully:", patient.name);
+}
+
+function updateActiveCard(patientId) {
+    const cards = document.querySelectorAll(".patient-card");
+    cards.forEach(card => {
+        card.classList.remove("active");
+        if (card.dataset.patientId === patientId) {
+            card.classList.add("active");
+        }
+    });
+}
+
+function savePatientData() {
+    const caseId = document.getElementById("viewPatientid")?.value;
+    const description = document.getElementById("viewdescription")?.value;
+    const departmentVal = document.getElementById("editDepartment")?.value;
+    const date = document.getElementById("editDate")?.value;
+    const approvalRadio = document.querySelector('input[name="attendance"]:checked');
+    
+    if (!caseId) {
+        alert("No patient selected");
+        return;
+    }
+
+    const patientIndex = Cases.findIndex(p => p.id === caseId);
+    if (patientIndex !== -1) {
+        Cases[patientIndex].description = description || Cases[patientIndex].description;
+        Cases[patientIndex].department = departmentVal || Cases[patientIndex].department;
+        Cases[patientIndex].date = date || Cases[patientIndex].date;
+        Cases[patientIndex].approve = approvalRadio?.value === "true" ? "approve" : "reject";
+        
+        alert("Patient data saved successfully!");
+        console.log("Updated patient:", Cases[patientIndex]);
+        
+        const headerName = document.querySelector(".patient-header-info h1");
+        if (headerName) {
+            headerName.textContent = Cases[patientIndex].name;
+        }
+    } else {
+        alert("Error: Patient not found!");
+    }
+}
+
+function searchPatients(searchTerm) {
+    const filteredCases = Cases.filter(patient => 
+        patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        patient.id.includes(searchTerm)
+    );
+    
+    const patientList = document.getElementById("patientList");
+    const queueCount = document.getElementById("queueCount");
+    
+    if (!patientList || !queueCount) return;
+
+    patientList.innerHTML = "";
+    
+    filteredCases.forEach((patient, index) => {
+        const card = document.createElement("div");
+        card.className = "patient-card";
+        if (index === 0) card.classList.add("active");
+        card.dataset.patientId = patient.id;
+
+        card.innerHTML = `
+            <div class="patient-avatar">${getInitials(patient.name)}</div>
+            <div class="patient-info">
+                <div class="patient-name">${patient.name}</div>
+                <div class="patient-date">Case ID: ${patient.id}</div>
+            </div>
+        `;
+
+        patientList.appendChild(card);
+    });
+
+    queueCount.textContent = `${filteredCases.length} patients today`;
+    
+    if (filteredCases.length > 0) {
+        loadPatientDetails(filteredCases[0].id);
+    }
+}
+
+function addNewPatient(newPatient) {
+    Cases.push(newPatient);
+    renderQueue();
+    loadPatientDetails(newPatient.id);
+}
+
+function getCurrentPatientData() {
+    return {
+        id: document.getElementById("docPatientid")?.value,
+        description: document.getElementById("docviewdescription")?.value,
+        department: document.getElementById("doceditDepartment")?.value,
+        date: document.getElementById("doceditDate")?.value,
+        approve: document.querySelector('input[name="attendance"]:checked')?.value === "true" ? "approve" : "reject"
+    };
+}
+
+function clearForm() {
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) {
+            if (el.tagName === 'IMG') {
+                el.src = value;
+            } else {
+                el.value = value;
+            }
+        }
+    };
+
+    setValue("docPatientid", "");
+    setValue("docviewdescription", "");
+    setValue("doceditDepartment", "");
+    setValue("doceditDate", "");
+    setValue("docpreviewImg", "");
+    
+    const approvalRadios = document.querySelectorAll('input[name="attendance"]');
+    approvalRadios.forEach(radio => {
+        radio.checked = false;
+    });
+    
+    const headerAvatar = document.querySelector(".patient-header-avatar");
+    const headerName = document.querySelector(".patient-header-info h1");
+    
+    if (headerAvatar) headerAvatar.textContent = "";
+    if (headerName) headerName.textContent = "";
+    
+    const cards = document.querySelectorAll(".patient-card");
+    cards.forEach(card => card.classList.remove("active"));
+}
+
+function initializePatientManagement() {
+    renderQueue();
+    
+    if (Cases.length > 0) {
+        loadPatientDetails(Cases[0].id, department);
+    }
+}
+
+// ============================================================
+// IMAGE MODAL FUNCTIONS
+// ============================================================
+function setupImageModals() {
+    const imageConfigs = [
+        { imgId: "previewImg", modalId: "imageModal", modalImgId: "modalImg" },
+        { imgId: "previewImgAfter", modalId: "imageModal", modalImgId: "modalImg" },
+        { imgId: "docbeforeImg", modalId: "docimageModal", modalImgId: "docmodalImg" },
+        { imgId: "docafterImg", modalId: "docimageModal", modalImgId: "docmodalImg" }
+    ];
+
+    imageConfigs.forEach(config => {
+        const img = document.getElementById(config.imgId);
+        const modal = document.getElementById(config.modalId);
+        const modalImg = document.getElementById(config.modalImgId);
+
+        if (img && modal && modalImg) {
+            img.addEventListener("click", function() {
+                modal.classList.add("active");
+                modalImg.src = this.src;
+            });
+        }
+    });
+
+    const closeBtn = document.getElementById("closeImage");
+    if (closeBtn) {
+        closeBtn.addEventListener("click", function() {
+            const modal1 = document.getElementById("imageModal");
+            const modal2 = document.getElementById("docimageModal");
+            if (modal1) modal1.classList.remove("active");
+            if (modal2) modal2.classList.remove("active");
+        });
+    }
+
+    ["imageModal", "docimageModal"].forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.addEventListener("click", function(e) {
+                if (e.target === modal) {
+                    modal.classList.remove("active");
+                }
+            });
+        }
+    });
+}
+
+// ============================================================
+// DATE FILTER FUNCTIONS
+// ============================================================
+function matchesDateFilter(recordDate, filterValue) {
+    if (!filterValue || !recordDate) return true;
+    
+    const record = new Date(recordDate);
+    const filter = new Date(filterValue);
+    
+    const recordYear = record.getFullYear();
+    const recordMonth = record.getMonth();
+    const recordDay = record.getDate();
+    
+    const filterYear = filter.getFullYear();
+    const filterMonth = filter.getMonth();
+    const filterDay = filter.getDate();
+    
+    const filterType = getDateFilterType(filterValue);
+    
+    switch(filterType) {
+        case 'year':
+            return recordYear === filterYear;
+        case 'month':
+            return recordYear === filterYear && recordMonth === filterMonth;
+        case 'day':
+            return recordDate === filterValue;
+        default:
+            return true;
+    }
+}
+
+function getDateFilterType(dateValue) {
+    const date = new Date(dateValue);
+    const month = date.getMonth();
+    const day = date.getDate();
+    
+    if (month === 0 && day === 1) {
+        return 'year';
+    } else if (day === 1) {
+        return 'month';
+    } else {
+        return 'day';
+    }
+}
+
+// ============================================================
+// FEEDBACK TABLE FUNCTIONS
+// ============================================================
+function populateFeedbackTable() {
+    const tableBody = document.getElementById('feedbackTable');
+    if (!tableBody) return;
+
+    const searchInput = document.getElementById('searchName');
+    const dateInput = document.getElementById('filterDate');
+
+    const searchValue = searchInput ? searchInput.value.toLowerCase() : '';
+    const dateValue = dateInput ? dateInput.value : '';
+
+    tableBody.innerHTML = '';
+
+    process.forEach((feedback, index) => {
+        const matchName = feedback.name.toLowerCase().includes(searchValue);
+        const matchDate = matchesDateFilter(feedback.date, dateValue);
+
+        if (matchName && matchDate) {
+            const row = document.createElement('tr');
+            let approvalClass = "";
+            if (feedback.approval.toLowerCase() === "approved") {
+                approvalClass = "approval-ok";
+            } else if (feedback.approval.toLowerCase() === "pending") {
+                approvalClass = "approval-pending";
+            } else if (feedback.approval.toLowerCase() === "rejected") {
+                approvalClass = "approval-no";
+            }
+
+            row.innerHTML = `
+            <td><strong>${feedback.ID}</strong></td>
+            <td>${feedback.name}</td>
+            <td style="max-width: 300px;">
+                <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${feedback.description}</p>
+            </td>
+            <td>${feedback.date}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view" title="View Details" onclick="openViewModal(${index})">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </td>
+            `;
+            tableBody.appendChild(row);
+        }
+    });
+}
+
+function openViewModal(index) {
+    const patient = process[index];
+    const modal = document.getElementById("viewModal");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || "";
+    };
+
+    if (department === "d001") {
+        const afterView = document.querySelector(".form-group.after_view");
+        const treatmentView = document.querySelector(".form-group.treatment_view");
+        if (afterView) afterView.style.display = "none";
+        if (treatmentView) treatmentView.style.display = "none";
+        
+        setValue("viewPatientid", patient.ID);
+        setValue("viewdescription", patient.description);
+        setValue("viewDepartment", patient.depart);
+        setValue("viewDate", patient.date);
+    } else {
+        const departmentView = document.querySelector(".form-group.department_view");
+        const dateView = document.querySelector(".form-group.date_view");
+        if (departmentView) departmentView.style.display = "none";
+        if (dateView) dateView.style.display = "none";
+        
+        setValue("viewPatientid", patient.ID);
+        setValue("viewdescription", patient.description);
+        setValue("viewTreatment", patient.treatment);
+        setValue("viewPhone", patient.phone);
+        setValue("viewEmail", patient.treatment);
+        setValue("viewAddress", patient.address);
+    }
+}
+
+function openEditModal(index) {
+    editIndex = index;
+    const patient = process[index];
+    const modal = document.getElementById("editModal");
+    if (!modal) return;
+
+    modal.style.display = "flex";
+
+    const setValue = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value || "";
+    };
+
+    setValue("editPatientName", patient.ID);
+    setValue("editPatientdis", patient.description);
+    setValue("edittreatment", patient.treatment);
+}
+
+function savePatient() {
+    if (editIndex !== null) {
+        const getValue = (id) => {
+            const el = document.getElementById(id);
+            return el ? el.value : "";
+        };
+
+        process[editIndex].ID = getValue("editPatientName");
+        process[editIndex].description = getValue("editPatientdis");
+        process[editIndex].treatment = getValue("edittreatment");
+        process[editIndex].department = getValue("editDepartment");
+        process[editIndex].date = getValue("editDate");
+
+        populateFeedbackTable();
+        closeModal("editModal");
+    }
+}
+
+// ============================================================
+// MODAL CLOSE FUNCTION
+// ============================================================
+function closeModal(id) {
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// ============================================================
+// FILE UPLOAD HANDLER
+// ============================================================
+function handleFileUpload(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    let label = document.querySelector(`label.photo-btn[for="${inputId}"]`);
+
+    if (!label) {
+        const group = input.closest('.form-group');
+        if (group) label = group.querySelector('label');
+    }
+
+    if (!label) {
+        label = document.querySelector(`label[for="${inputId}"]`);
+    }
+
+    if (!label) return;
+
+    if (!label.getAttribute('data-default')) {
+        label.setAttribute('data-default', label.innerHTML.trim());
+    }
+
+    input.addEventListener('change', () => {
+        if (input.files && input.files.length > 0) {
+            label.classList.add('uploaded');
+
+            const fileName = input.files[0].name;
+            label.innerHTML = `<i class="fa-solid fa-camera"></i> <span class="label-text">${fileName}</span>`;
+
+            label.style.background = '#28a745';
+            label.style.color = '#fff';
+        } else {
+            label.classList.remove('uploaded');
+            label.innerHTML = label.getAttribute('data-default') || '';
+            label.style.background = '';
+            label.style.color = '';
+        }
+    });
+}
+
+// ============================================================
+// NAVIGATION & SIDEBAR FUNCTIONS
+// ============================================================
+function createRipple(element) {
+    const ripple = document.createElement('span');
+    const rect = element.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    
+    ripple.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        top: 50%;
+        left: 50%;
+        margin-top: ${-size / 2}px;
+        margin-left: ${-size / 2}px;
+        pointer-events: none;
+    `;
+    
+    element.style.position = 'relative';
+    element.appendChild(ripple);
+    
+    setTimeout(() => {
+        ripple.remove();
+    }, 600);
+}
+
+function setupNavigation() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const patientQueue = document.getElementById('patientQueue');
+    const mainContent = document.getElementById('mainContent');
+    const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+    const pageSections = document.querySelectorAll('.page-section');
+
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+            const icon = sidebarToggle.querySelector('i');
+            
+            if (icon) {
+                if (sidebar.classList.contains('expanded')) {
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        });
+    }
+
+    sidebarIcons.forEach(icon => {
+        icon.addEventListener('click', () => {
+            const targetPage = icon.dataset.page;
+            
+            sidebarIcons.forEach(i => i.classList.remove('active'));
+            pageSections.forEach(section => section.classList.remove('active'));
+            
+            icon.classList.add('active');
+            const targetSection = document.getElementById(targetPage);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            if (patientQueue && mainContent) {
+                if (targetPage === 'patients') {
+                    patientQueue.classList.add('show');
+                    mainContent.classList.add('with-patient-queue');
+                } else {
+                    patientQueue.classList.remove('show');
+                    mainContent.classList.remove('with-patient-queue');
+                }
+            }
+            
+            createRipple(icon);
+            
+            if (targetSection) {
+                setTimeout(() => {
+                    targetSection.style.opacity = '0';
+                    targetSection.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        targetSection.style.transition = 'all 0.3s ease';
+                        targetSection.style.opacity = '1';
+                        targetSection.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 100);
+            }
+        });
+    });
+}
+
+// ============================================================
+// PATIENT CARD SELECTION
+// ============================================================
+function setupPatientCardSelection() {
+    const patientCards = document.querySelectorAll('.patient-card');
+
+    patientCards.forEach(card => {
+        card.addEventListener('click', () => {
+            patientCards.forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            
+            const patientId = card.dataset.patient;
+            const patient = student_patient[patientId];
+            
+            if (patient) {
+                updatePatientDetailsForStudents(patient);
+            }
+            
+            card.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                card.style.transform = '';
+            }, 150);
+        });
+    });
+}
+
+function updatePatientDetailsForStudents(patient) {
+    const headerAvatar = document.querySelector('#patients .patient-header-avatar');
+    const headerName = document.querySelector('#patients .patient-header-info h1');
+    const memberBadge = document.querySelector('#patients .member-badge');
+    
+    if (headerAvatar) headerAvatar.textContent = patient.avatar;
+    if (headerName) headerName.textContent = patient.name;
+    if (memberBadge) memberBadge.textContent = patient.badge;
+    
+    const formValues = document.querySelectorAll('#patients .form-value');
+    if (formValues.length >= 5) {
+        formValues[0].textContent = patient.info.gender;
+        formValues[1].textContent = patient.info.dob;
+        formValues[2].textContent = patient.info.phone;
+        formValues[3].textContent = patient.info.email;
+        formValues[4].textContent = patient.info.address;
+    }
+    
+    const policyDiv = document.querySelector('#patients [style*="font-weight: 600"]');
+    if (policyDiv) policyDiv.textContent = `Policy #: ${patient.insurance.policy}`;
+}
+
+// ============================================================
+// SEARCH FUNCTIONALITY
+// ============================================================
+function setupSearchFunctionality() {
+    const searchName = document.getElementById('searchName');
+    
+    if (searchName) {
+        searchName.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#StudentApproval tr');
+            
+            rows.forEach(row => {
+                const nameCell = row.cells[1];
+                if (nameCell) {
+                    const name = nameCell.textContent.toLowerCase();
+                    row.style.display = name.includes(searchTerm) ? '' : 'none';
+                }
+            });
+        });
+    }
+}
+
+// ============================================================
+// BUTTON INTERACTIONS
+// ============================================================
+function setupButtonInteractions() {
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.action-btn')) {
+            const btn = e.target.closest('.action-btn');
+            createRipple(btn);
+            
+            btn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                btn.style.transform = '';
+            }, 150);
+        }
+    });
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains("modal")) {
+            event.target.style.display = "none";
+        }
+    };
+}
+
+// ============================================================
+// MOBILE RESPONSIVENESS
+// ============================================================
+function handleResize() {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar && window.innerWidth <= 768) {
+        sidebar.classList.remove('expanded');
+    }
+}
+
+// ============================================================
+// PAGE INITIALIZATION ANIMATION
+// ============================================================
+function initializePageAnimation() {
+    const activeSection = document.querySelector('.page-section.active');
+    if (activeSection) {
+        activeSection.style.opacity = '0';
+        activeSection.style.transform = 'translateY(30px)';
+        
+        setTimeout(() => {
+            activeSection.style.transition = 'all 0.6s ease';
+            activeSection.style.opacity = '1';
+            activeSection.style.transform = 'translateY(0)';
+        }, 100);
+    }
+}
+
+// ============================================================
+// ADD RIPPLE ANIMATION KEYFRAMES
+// ============================================================
+function addRippleStyles() {
+    const rippleStyle = document.createElement('style');
+    rippleStyle.textContent = `
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(rippleStyle);
+}
+
+// ============================================================
+// FORM SUBMISSION HANDLER
+// ============================================================
+function setupFormSubmission() {
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            savePatientData();
+        });
+    }
+}
+
+// ============================================================
+// PATIENT MANAGEMENT EXPORT
+// ============================================================
+window.PatientManagement = {
+    init: initializePatientManagement,
+    loadPatient: loadPatientDetails,
+    searchPatients: searchPatients,
+    addPatient: addNewPatient,
+    saveData: savePatientData,
+    getCurrentData: getCurrentPatientData,
+    clearForm: clearForm,
+    getCases: () => Cases
+};
+
+// ============================================================
+// MAIN INITIALIZATION - CONSOLIDATED DOMContentLoaded
+// ============================================================
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log("🚀 Starting initialization...");
+
+    // 1. Load Doctor Data
+    if (doctorID) {
+        await set_doctor_data(doctorID);
+        await load_doctor_student_cases(doctorID);
+        console.log("✅ Doctor data loaded. Department:", department);
+    } else {
+        alert("لم يتم تحديد الطبيب في الرابط!");
+        console.warn("⚠️ No doctor ID found in URL");
+    }
+
+    // 2. Initialize UI Components
+    setupImageModals();
+    setupNavigation();
+    setupPatientCardSelection();
+    setupSearchFunctionality();
+    setupButtonInteractions();
+    setupFormSubmission();
+    addRippleStyles();
+
+    // 3. Initialize Tables
+    populateStudentsTable();
+    populateFeedbackTable();
+
+    // 4. Setup Event Listeners
+    const searchInput = document.getElementById('searchName');
+    const dateInput = document.getElementById('filterDate');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', populateFeedbackTable);
+    }
+    if (dateInput) {
+        dateInput.addEventListener('change', populateFeedbackTable);
+    }
+
+    // 5. File Upload Handlers
+    handleFileUpload('before-upload');
+    handleFileUpload('after-upload');
+
+    // 6. Patient Card Click Events - REMOVED (now handled in renderQueue)
+    // Cards are now created with click events attached directly
+
+    // 7. Initialize Patient Management
+    initializePatientManagement();
+
+    // 8. Mobile Responsiveness
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    // 9. Page Animation
+    initializePageAnimation();
+
+    console.log("✅ All systems initialized successfully!");
+});
+    </script>
+</body>
+</html>
