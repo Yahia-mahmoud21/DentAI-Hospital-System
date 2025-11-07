@@ -6,7 +6,7 @@
     <title>Medical Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -934,11 +934,11 @@
         }
 
         .form-group .img {
-                width: 100%;             /* تاخد العرض بالكامل */
-                max-height: 250px;       /* متعديش الطول ده */
-                object-fit: contain;     /* تحافظ على الأبعاد */
-                border-radius: 0.75rem;  /* زوايا ناعمة */
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* ظل خفيف */
+                width: 100%;             
+                max-height: 250px;       
+                object-fit: contain;     
+                border-radius: 0.75rem;  
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
                 margin-top: 0.5rem;
                 display: block;
             }
@@ -947,9 +947,9 @@
     transform: scale(1.02);
 }
 
-/* المودال اللي هيعرض الصورة */
+/* Modal for image preview */
 .image-modal {
-    display: none; /* مخفي في الأول */
+    display: none; 
     position: fixed;
     z-index: 2000;
     left: 0;
@@ -972,7 +972,6 @@
     box-shadow: 0 8px 25px rgba(0,0,0,0.4);
 }
 
-/* زرار قفل */
 .image-modal .close-image {
     position: absolute;
     top: 15px;
@@ -1078,9 +1077,8 @@
     display: none;
   }
 
-  /* لما يتحمل الملف */
   .photo-btn.uploaded {
-    background: #28a745 !important; /* أخضر */
+    background: #28a745 !important;
     color: #fff !important;
   }
                     
@@ -1604,111 +1602,10 @@
             51%, 100% { border-color: transparent; }
         }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
         @keyframes shimmer {
             0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
             100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
-
-        @media (max-width: 768px) {
-            .page-header h1 {
-                font-size: 2rem;
-            }
-            
-            .ai-container {
-                margin: 1rem;
-                padding: 1.5rem;
-            }
-            
-            .drop-zone {
-                padding: 2rem;
-            }
-        }
-
-        .loading-spinner {
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ffffff40;
-    border-top: 2px solid #ffffff;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    display: none;
-    margin-left: 10px;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-
-
-.result-container.show {
-    display: block;
-    animation: fadeInUp 0.5s ease;
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.typing-indicator {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 15px;
-    color: #666;
-}
-
-.typing-indicator.show {
-    display: flex;
-}
-
-.typing-dots {
-    display: flex;
-    gap: 4px;
-}
-
-.typing-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #4facfe;
-    animation: typing 1.4s infinite ease-in-out;
-}
-
-.typing-dot:nth-child(1) { animation-delay: -0.32s; }
-.typing-dot:nth-child(2) { animation-delay: -0.16s; }
-
-@keyframes typing {
-    0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
-    40% { transform: scale(1); opacity: 1; }
-}
-
-.action-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-.pulse {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0.7); }
-    70% { box-shadow: 0 0 0 10px rgba(79, 172, 254, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(79, 172, 254, 0); }
-}
 
 .result-container {
     margin-top: 20px;
@@ -1717,17 +1614,16 @@
     border-radius: 10px;
     display: none;
     position: relative;
-    overflow: hidden; /* Prevent content from affecting layout */
+    overflow: hidden;
 }
 
 .ai-response {
     line-height: 1.6;
     color: #333;
-    word-wrap: break-word; /* Prevent horizontal overflow */
+    word-wrap: break-word;
     overflow-wrap: break-word;
 }
 
-/* Prevent layout shifts during typing */
 .ai-response * {
     margin-top: 0;
     margin-bottom: 15px;
@@ -1740,7 +1636,6 @@
     margin-top: 0;
 }
 
-/* Stabilize list rendering */
 .ai-response ul, .ai-response ol {
     padding-left: 25px;
     margin-bottom: 15px;
@@ -1904,7 +1799,6 @@
                 </div>
             </div>
             <!-- View Feedback Modal -->
-       <!-- View Feedback Modal -->
 <div id="viewModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -1923,7 +1817,7 @@
         <img src="" class="img" id="previewImg">
         </div>
 
-        <!-- مودال الصورة -->
+        <!-- Image modal -->
         <div class="image-modal" id="imageModal">
             <span class="close-image" id="closeImage">&times;</span>
             <img id="modalImg" src="">
@@ -2048,21 +1942,6 @@
 
         </div>
 
-
-        <!-- <div id="editModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('editModal')">&times;</span>
-            <h2>Edit Feedback</h2>
-            <label>Student:</label>
-            <input type="text" id="editStudent" readonly><br><br>
-            <label>Feedback:</label>
-            <textarea id="editFeedback" rows="4" cols="40"></textarea><br><br>
-            <label>Instructor:</label>
-            <input type="text" id="editInstructor"><br><br>
-            <button onclick="saveFeedback()">Save</button>
-        </div>
-        </div> -->
-
         </div>
                 
            
@@ -2154,42 +2033,6 @@
                 </div>
 
                 <!-- Right Column -->
-                <!-- <div class="content-column">
-                    
-                    <div class="info-card">
-                        <div class="card-title">
-                            <i class="fas fa-bolt"></i>
-                            Quick Actions
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 12px;">
-                            <button class="action-btn primary">
-                                <i class="fas fa-plus"></i>
-                                Schedule Appointment
-                            </button>
-                            <button class="action-btn secondary">
-                                <i class="fas fa-edit"></i>
-                                Update Information
-                            </button>
-                            <button class="action-btn secondary">
-                                <i class="fas fa-file-medical"></i>
-                                Add Treatment Note
-                            </button>
-                        </div>
-                    </div> -->
-
-                    <!-- Insurance Info -->
-                    <!-- <div class="info-card" style="background: linear-gradient(135deg, #6F42C1 0%, #8A63D2 100%); color: white;">
-                        <div class="card-title" style="color: white;">
-                            <i class="fas fa-shield-alt" style="color: white;"></i>
-                            Insurance Information
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; margin-bottom: 8px;">Policy #: HC-2024-789456</div>
-                            <div>Provider: HealthCare Plus</div>
-                            <div>Status: Active Coverage</div>
-                        </div>
-                    </div> -->
-                </div>
             </div>
         </section>
 
@@ -2338,27 +2181,7 @@
                         <canvas id="departmentChart"></canvas>
                     </div>
                 </div>
-                
-                <div class="info-card" style="grid-column: 1 / -1;">
-                    <div class="card-title">
-                        <i class="fas fa-chart-line"></i>
-                        Cases Trend Over Time
-                    </div>
-                    <div class="chart-container" style="position: relative; height: 320px;">
-                        <canvas id="trendChart"></canvas>
-                    </div>
-                </div>
-                
-                <div class="info-card">
-                    <div class="card-title">
-                        <i class="fas fa-chart-area"></i>
-                        Treatment Distribution
-                    </div>
-                    <div class="chart-container" style="position: relative; height: 320px;">
-                        <canvas id="treatmentChart"></canvas>
-                    </div>
-                </div>
-                
+              
                 <div class="info-card">
                     <div class="card-title">
                         <i class="fas fa-users"></i>
@@ -2368,6 +2191,19 @@
                         <canvas id="genderChart"></canvas>
                     </div>
                 </div>
+               
+                <div class="info-card">
+                    <div class="card-title">
+                        <i class="fas fa-chart-area"></i>
+                        Treatment Of Cases 
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 320px;">
+                        <canvas id="treatmentChart"></canvas>
+                    </div>
+                </div>
+                
+                
+                
             </div>
 
             <div class="content-grid">
@@ -2533,10 +2369,6 @@
     </main>
 
     <script>
-
-        
-      
-
          const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const previewContainer = document.getElementById('previewContainer');
@@ -2549,7 +2381,7 @@
         const newAnalysisBtn = document.getElementById('newAnalysisBtn');
 
         // API Configuration
-        const API_URL = 'http://127.0.0.1:8000/api/v1/AI/classification'; // Change to your actual API URL
+        const API_URL = 'http://127.0.0.1:8000/api/v1/AI/classification';
         let currentFile = null;
 
         // Class descriptions mapping
@@ -2642,7 +2474,7 @@
                 }
 
                 // Validate file size (max 10MB)
-                const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+                const maxSize = 10 * 1024 * 1024;
                 if (file.size > maxSize) {
                     showError('File size exceeds 10MB. Please upload a smaller image.');
                     return;
@@ -2738,7 +2570,7 @@
             errorMessage.classList.add('show');
             setTimeout(() => {
                 errorMessage.classList.remove('show');
-            }, 5000); // Auto-hide after 5 seconds
+            }, 5000);
         }
 
 
@@ -2751,12 +2583,12 @@
 
         img.addEventListener("click", function () {
             modal.classList.add("active");
-            modalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
+            modalImg.src = this.src;
         });
 
         img2.addEventListener("click", function () {
             modal.classList.add("active");
-            modalImg.src = this.src; // يخلي الصورة الكبيرة نفس الصورة الصغيرة
+            modalImg.src = this.src;
         });
 
 
@@ -2764,7 +2596,6 @@
             modal.classList.remove("active");
         });
 
-        // كمان لو دوست برا الصورة يتقفل
         modal.addEventListener("click", function (e) {
             if (e.target === modal) {
                 modal.classList.remove("active");
@@ -2773,81 +2604,10 @@
 
         
 
-
-
-        
-       
-
-        
-        // Patient data
-        const patientData = {
-            'sarah-johnson': {
-                avatar: 'SJ',
-                name: 'Sarah Johnson',
-                badge: 'Premium Member',
-                info: {
-                    gender: 'Female',
-                    dob: 'March 15, 1985',
-                    phone: '(555) 123-4567',
-                    email: 'sarah.johnson@email.com',
-                    address: '123 Main Street, New York, NY 10001',
-                    emergency: 'John Johnson - (555) 987-6543'
-                },
-                insurance: {
-                    policy: 'HC-2024-789456',
-                    expires: 'December 31, 2024',
-                    provider: 'HealthCare Plus',
-                    status: 'Active Coverage'
-                }
-            },
-            'mike-chen': {
-                avatar: 'MC',
-                name: 'Mike Chen',
-                badge: 'Standard Member',
-                info: {
-                    gender: 'Male',
-                    dob: 'July 22, 1990',
-                    phone: '(555) 234-5678',
-                    email: 'mike.chen@email.com',
-                    address: '456 Oak Avenue, Los Angeles, CA 90210',
-                    emergency: 'Lisa Chen - (555) 876-5432'
-                },
-                insurance: {
-                    policy: 'HC-2024-234567',
-                    expires: 'June 30, 2024',
-                    provider: 'MediCare Pro',
-                    status: 'Active Coverage'
-                }
-            },
-            'emma-davis': {
-                avatar: 'ED',
-                name: 'Emma Davis',
-                badge: 'New Patient',
-                info: {
-                    gender: 'Female',
-                    dob: 'November 8, 1995',
-                    phone: '(555) 345-6789',
-                    email: 'emma.davis@email.com',
-                    address: '789 Pine Street, Chicago, IL 60601',
-                    emergency: 'Robert Davis - (555) 765-4321'
-                },
-                insurance: {
-                    policy: 'HC-2024-345678',
-                    expires: 'September 15, 2024',
-                    provider: 'HealthFirst',
-                    status: 'Pending Verification'
-                }
-            }
-        };
-
-
-
-
-
    const API_CONFIG = { 
-    BASE_URL: "http://127.0.0.1:8000/api/v1",  // عنوان السيرفر (FastAPI)
+    BASE_URL: "http://127.0.0.1:8000/api/v1",
     ENDPOINTS: {
-        DATA: "/student"                 // لينك تسجيل الدخول
+        DATA: "/student"
     }
 };
 
@@ -2902,17 +2662,9 @@ if (studentId) {
     console.warn("No student_id in URL");
 }
 
-
-
-
-
 async function loadPatients() {
     try {
-            console.log("Using department variable:", department);
-
-
-        // اختار اللينك على حسب الـ department
-      
+        console.log("Using department variable:", department);
 
         const response = await fetch(`http://127.0.0.1:8000/api/patients/${department}`);
         const data = await response.json();
@@ -2940,7 +2692,6 @@ async function loadPatients() {
 
             patientList.appendChild(card);
 
-            // لما تدوس على الكارت يحدث التفاصيل
             card.addEventListener("click", () => {
                 document.querySelectorAll(".patient-card")
                         .forEach(c => c.classList.remove("active"));
@@ -2949,7 +2700,6 @@ async function loadPatients() {
             });
         });
 
-        // أول مريض يظهر أوتوماتيك
         if (data.patients.length > 0) {
             updatePatientDetails(data.patients[0]);
         }
@@ -2987,11 +2737,9 @@ async function init() {
         return;
     }
 
-    // Wait for the department to be fetched and stored
     const fetchedDepartment = await fetchStudent(studentId);
-    department = fetchedDepartment; // Ensure department variable is updated
+    department = fetchedDepartment;
     
-    // Store process data globally so modal functions can access it
     async function loadStudentCases(studentId) {
     try {
         const response = await fetch(`http://127.0.0.1:8000/api/student/cases/table/${studentId}`);
@@ -3013,7 +2761,7 @@ async function init() {
             }));
 
             console.log("Cases loaded:", currentProcess);
-            populateFeedbackTable(); // أو أي فانكشن بتعرض الداتا
+            populateFeedbackTable();
         } else {
             alert(result.message);
         }
@@ -3021,25 +2769,17 @@ async function init() {
         console.error("Error loading student cases:", err);
     }
 }
-    // Now you can use the department variable
     console.log("Using department variable:", department);
      await loadPatients();
-    // Call the function to populate the table
     populateFeedbackTable();
 
     await loadStudentCases(studentId);
-    // الفانكشن اللي بتجمع البيانات وتبعتها للسيرفر
- 
-
-// اربط الفانكشن بالزرار
 }
-
 
 async function postEditCase(event) {
     event.preventDefault();
     
     try {
-        // ❶ جمع البيانات من الـ HTML
         const student_case_id = document.getElementById("studentIDHead").innerText;
         const case_id = document.getElementById("editPatientName").value;
         const department_id = document.getElementById("studentdepartmentHead").innerText
@@ -3048,7 +2788,6 @@ async function postEditCase(event) {
         const department = document.getElementById("editDepartment").value;
         const date = document.getElementById("editDate").value;
 
-        // ❷ التحقق من البيانات قبل الإرسال
         console.log("=== Debug: Form Data ===");
         console.log("Student Case ID:", student_case_id);
         console.log("Case ID:", case_id);
@@ -3057,16 +2796,12 @@ async function postEditCase(event) {
         console.log("Department:", department);
         console.log("Date:", date);
 
-        
-
-        // ❹ جمع الملفات
         const before = document.getElementById("before-upload").files[0];
         const after = document.getElementById("after-upload").files[0];
 
         console.log("Before file:", before ? before.name : "No file");
         console.log("After file:", after ? after.name : "No file");
 
-        // ❺ إنشاء FormData
         const formData = new FormData();
         formData.append("student_id", student_case_id);
         formData.append("case_id", case_id);
@@ -3076,7 +2811,6 @@ async function postEditCase(event) {
         formData.append("department", department);
         formData.append("date", date);
         
-        // إضافة الملفات فقط إذا كانت موجودة
         if (before) {
             formData.append("before", before);
         }
@@ -3084,7 +2818,6 @@ async function postEditCase(event) {
             formData.append("after", after);
         }
 
-        // ❻ طباعة محتويات FormData للتأكد
         console.log("=== FormData Contents ===");
         for (let [key, value] of formData.entries()) {
             if (value instanceof File) {
@@ -3095,24 +2828,19 @@ async function postEditCase(event) {
         }
         console.log("========================");
 
-        // ❼ إرسال الطلب
         console.log("Sending request...");
         const response = await fetch("http://127.0.0.1:8000/api/v1/edit/case", {
             method: "POST",
             body: formData
-            // ⚠️ لا تضع headers يدوياً - المتصفح يضعها تلقائياً مع FormData
         });
 
         console.log("Response status:", response.status);
 
-        // ❽ معالجة الرد
         const result = await response.json();
         console.log("Response data:", result);
 
         if (response.ok && result.success) {
             alert("Case updated successfully!");
-            // يمكنك إضافة كود هنا لإعادة تحميل الصفحة أو إغلاق النموذج
-            // location.reload(); // مثال
         } else {
             alert("Failed: " + (result.message || "Unknown error"));
         }
@@ -3122,10 +2850,6 @@ async function postEditCase(event) {
         alert("Something went wrong! Check console for details.");
     }
 }
-
-
-    
-
 
 async function loadStudentCases(studentId) {
     try {
@@ -3150,10 +2874,8 @@ async function loadStudentCases(studentId) {
             };
         });
 
-
-
             console.log("Cases loaded:", currentProcess);
-            populateFeedbackTable(); // أو أي فانكشن بتعرض الداتا
+            populateFeedbackTable();
         } else {
             alert(result.message);
         }
@@ -3173,12 +2895,6 @@ function openViewModal(index) {
     modal.style.display = "flex";
 
     if (department === "d001") {
-
-        
-
-
-
-
         document.querySelector(".form-group.after_view").style.display = "none";
         document.querySelector(".form-group.treatment_view").style.display = "none";
         
@@ -3187,8 +2903,6 @@ function openViewModal(index) {
         document.getElementById("previewImg").src = `/static/uploads/${patient.before}`;
         document.getElementById("viewDepartment").value = patient.department_reffere || "";
         document.getElementById("viewDate").value = patient.date || "";
-
-
     } else {
         document.querySelector(".form-group.department_view").style.display = "none";
         document.querySelector(".form-group.date_view").style.display = "none";
@@ -3202,24 +2916,17 @@ function openViewModal(index) {
         document.getElementById("viewAddress").value = patient.address || "";
     }
 }
+
 function openNotesModal(index) {
     const patient = currentProcess[index];
-    console.log("Opening notes for:", patient); // 👈
-    console.log("Notes value:", patient.notes); // 👈
+    console.log("Opening notes for:", patient);
+    console.log("Notes value:", patient.notes);
     const modal = document.getElementById("notesModal");
     modal.style.display = "flex";
 
     if (department === "d001") {
-
-
-        
-        
         document.getElementById("ViewNotes").value = patient.notes || "";
-      
-
-
     } else {
-      
         document.getElementById("ViewNotes").value = patient.notes || "";
     }
 }
@@ -3259,7 +2966,7 @@ function populateFeedbackTable() {
     currentProcess.forEach((feedback, index) => {
         const row = document.createElement('tr');
         let approvalClass = "";
-        let approvalText = "";   // متغير وسيط
+        let approvalText = "";
 
         if (feedback.approval === "1") {
             approvalClass = "approval-ok";
@@ -3272,7 +2979,6 @@ function populateFeedbackTable() {
             approvalText = "Rejected";
         }
         console.log("Row:", feedback.ID, "Approval:", feedback.approval, "Class:", approvalClass);
-
 
         row.innerHTML = `
         <td><strong>${feedback.ID}</strong></td>
@@ -3299,9 +3005,7 @@ function populateFeedbackTable() {
     });
 }
 
-
 async function sendPatientData() {
-   
     studetnt_case_id = document.getElementById("case_id").innerText
     studetnt_department_id = document.getElementById("studentdepartmentHead").innerText
     studetnt_student_id = document.getElementById("studentIDHead").innerText
@@ -3332,28 +3036,24 @@ async function sendPatientData() {
         console.error("Error:", error);
         alert("Something went wrong!");
     }
-
-    }
+}
 
 document.getElementById("addPatientBtn").addEventListener("click", sendPatientData);
 
 async function typeMarkdown(element, markdownText, speed = 10) {
     return new Promise((resolve) => {
-        // Pre-render the full content to get final dimensions
         const tempDiv = document.createElement('div');
         tempDiv.style.visibility = 'hidden';
         tempDiv.style.position = 'absolute';
         tempDiv.innerHTML = marked.parse(markdownText);
         document.body.appendChild(tempDiv);
         
-        // Set container to final height to prevent jumping
         const finalHeight = tempDiv.offsetHeight;
         element.style.minHeight = finalHeight + 'px';
-        element.style.transition = 'none'; // Disable transitions during typing
+        element.style.transition = 'none';
         
         document.body.removeChild(tempDiv);
         
-        // Now do word-by-word typing (much smoother)
         const words = markdownText.split(' ');
         let currentIndex = 0;
         element.innerHTML = '';
@@ -3365,7 +3065,6 @@ async function typeMarkdown(element, markdownText, speed = 10) {
                 currentIndex++;
                 setTimeout(typeWord, speed);
             } else {
-                // Final cleanup
                 element.style.minHeight = 'auto';
                 element.style.transition = '';
                 resolve();
@@ -3375,44 +3074,25 @@ async function typeMarkdown(element, markdownText, speed = 10) {
     });
 }
 
-
-
-
-
-// Call init function when the page loads
 init();
 
-
-
-
-
-
-
-
-
-
-
-       function handleFileUpload(inputId) {
+function handleFileUpload(inputId) {
   const input = document.getElementById(inputId);
   if (!input) return;
 
-  // 1) نحاول نجيب label اللي فعلاً styled كـ button أولاً
   let label = document.querySelector(`label.photo-btn[for="${inputId}"]`);
 
-  // 2) لو مش لاقيه، ندوّر على أقرب form-group ونجيب اللابل اللي جواه
   if (!label) {
     const group = input.closest('.form-group');
     if (group) label = group.querySelector('label');
   }
 
-  // 3) أخيراً fallback لأي label عادي مربوط بنفس الـ for
   if (!label) {
     label = document.querySelector(`label[for="${inputId}"]`);
   }
 
-  if (!label) return; // مافيش لابل خالص
+  if (!label) return;
 
-  // نخزن النص الافتراضي لو مش متخزن
   if (!label.getAttribute('data-default')) {
     label.setAttribute('data-default', label.innerHTML.trim());
   }
@@ -3421,11 +3101,9 @@ init();
     if (input.files && input.files.length > 0) {
       label.classList.add('uploaded');
 
-      // لو تحب تحافظ على أي أيقونات داخل الليبل، استخدم innerHTML مع أيقونة
       const fileName = input.files[0].name;
       label.innerHTML = `<i class="fa-solid fa-camera"></i> <span class="label-text">${fileName}</span>`;
 
-      // كـ backup لو فيه CSS عالي الأولوية، نحط inline style
       label.style.background = '#28a745';
       label.style.color = '#fff';
     } else {
@@ -3437,16 +3115,8 @@ init();
   });
 }
 
-// استدعيها كده
 handleFileUpload('before-upload');
 handleFileUpload('after-upload');
-
-
-
-
-
-
-
 
         // DOM Elements
         const sidebar = document.getElementById('sidebar');
@@ -3457,23 +3127,20 @@ handleFileUpload('after-upload');
         const sidebarIcons = document.querySelectorAll('.sidebar-icon');
         const pageSections = document.querySelectorAll('.page-section');
 
-        // Navigation functionality - This is the key linking mechanism
+        // Navigation functionality
          sidebarIcons.forEach(icon => {
             icon.addEventListener('click', () => {
                 const targetPage = icon.dataset.page;
                 
-                // Remove active class from all icons and sections
                 sidebarIcons.forEach(i => i.classList.remove('active'));
                 pageSections.forEach(section => section.classList.remove('active'));
                 
-                // Add active class to clicked icon and corresponding section
                 icon.classList.add('active');
                 const targetSection = document.getElementById(targetPage);
                 if (targetSection) {
                     targetSection.classList.add('active');
                 }
                 
-                // Show/hide patient queue based on current page
                 if (targetPage === 'patients') {
                     patientQueue.classList.add('show');
                     mainContent.classList.add('with-patient-queue');
@@ -3482,10 +3149,8 @@ handleFileUpload('after-upload');
                     mainContent.classList.remove('with-patient-queue');
                 }
                 
-                // Add visual feedback
                 createRipple(icon);
                 
-                // Animate section transition
                 setTimeout(() => {
                     targetSection.style.opacity = '0';
                     targetSection.style.transform = 'translateY(20px)';
@@ -3498,40 +3163,7 @@ handleFileUpload('after-upload');
                 }, 100);
             });
         });
-        // patients table
-        
 
-// حفظ البيانات بعد التعديل
-function savePatient() {
-    if (editIndex !== null) {
-        process[editIndex].ID = document.getElementById("editPatientName").value;
-        process[editIndex].description = document.getElementById("editPatientdis").value;
-        process[editIndex].treatment = document.getElementById("edittreatment").value;
-        process[editIndex].department = document.getElementById("editDepartment").value;
-        process[editIndex].date = document.getElementById("editDate").value;
-        
-        // الصور لازم تتعامل معاها برفع جديد (input file) زي ما قلتلك قبل كده
-        // مينفعش تحط قيمة مباشرة في input type="file"
-
-        populateFeedbackTable(); // يعيد رسم الجدول
-        closeModal("editModal");
-    }
-}
-
-
-// لما تدوس برا المودال يتقفل
-window.onclick = function(event) {
-    if (event.target.classList.contains("modal")) {
-        event.target.style.display = "none";
-    }
-};
-
-// تشغيل الجدول أول مرة
-populateFeedbackTable();
-
-
-
-        // Sidebar functionality
         sidebarToggle.addEventListener('click', () => {
             sidebar.classList.toggle('expanded');
             const icon = sidebarToggle.querySelector('i');
@@ -3543,51 +3175,27 @@ populateFeedbackTable();
             }
         });
         
-        // Page navigation
         document.querySelectorAll('.sidebar-icon').forEach(icon => {
             icon.addEventListener('click', () => {
-                // Remove active class from all icons
                 document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
                 
-                // Add active class to clicked icon
                 icon.classList.add('active');
                 
-                // Hide all page sections
                 document.querySelectorAll('.page-section').forEach(section => {
                     section.style.display = 'none';
                 });
                 
-                // Show the selected page section
                 const pageId = icon.getAttribute('data-page');
                 const pageSection = document.getElementById(pageId);
                 if (pageSection) {
                     pageSection.style.display = 'block';
                     
-                    // Initialize charts if reports page is selected
                     if (pageId === 'reports') {
                         initializeCharts();
                     }
                 }
             });
         });
-
-
-
-
-
-
-
-      
-
-
-
-
-
-
-
-
-
-        
 
         // Ripple effect function
         function createRipple(element) {
@@ -3618,18 +3226,16 @@ populateFeedbackTable();
             }, 600);
         }
         
-        // Chart instances object to track and manage charts
+        // Chart instances object
         let chartInstances = {};
         
         // Initialize charts for Reports section
         function initializeCharts() {
-            // Clear any existing charts
             Object.values(chartInstances).forEach(chart => {
                 if (chart) chart.destroy();
             });
             chartInstances = {};
             
-            // Create sample data
             const sampleData = Array.from({length: 50}, (_, i) => ({
                 id: i + 1,
                 name: `Patient ${i + 1}`,
@@ -3641,24 +3247,66 @@ populateFeedbackTable();
             }));
             
             createStatusChart(sampleData);
-            createDepartmentChart(sampleData);
             createTrendChart(sampleData);
-            createTreatmentChart(sampleData);
-            createGenderChart(sampleData);
+            
+    if (studentId) {
+        loadlTreatment(studentId);  // ✅ مرر الـ studentId
+    }
+            if (studentId) {
+        loadGenderStats(studentId);  // ✅ مرر الـ studentId
+    }
+    if (studentId) {
+        loadCheckedStats(studentId);  // ✅ مرر الـ studentId
+    }
+    if (studentId) {
+        loadCaseByDepartmentStats(studentId);  // ✅ مرر الـ studentId
+    }
         }
-        //خخخخخخخخخخخخخخخخخخخخخخخخخخخخخخخخ
-        function createStatusChart(data) {
-            const approved = data.filter(c => c.status === "Approved").length;
-            const pending = data.filter(c => c.status === "Pending").length;
-            const rejected = data.filter(c => c.status === "Rejected").length;
+  ////////////////////////////////////////////////////////////////////////////////        
+  async function loadCheckedStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/checked/${studentId}`);
+        const result = await response.json();
 
-            const ctx = document.getElementById('statusChart').getContext('2d');
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const num_of_rejectied = result["num_of_rejectied"] || 0;
+            const num_of_pending = result["num_of_pending"] || 0;
+            const num_of_approved = result["num_of_approved"] || 0;
+
+            console.log("num_of_rejectied:", num_of_rejectied, "num_of_rejectied:", num_of_rejectied,"num_of_approved:", num_of_approved);
+            createStatusChart(num_of_pending,num_of_rejectied,num_of_approved)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+}
+  
+
+        function createStatusChart(num_of_pending,num_of_rejectied,num_of_approved) {
+            // Make sure the canvas element exists
+            const canvas = document.getElementById('statusChart');
+            if (!canvas) {
+                console.error('Status chart canvas not found');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.statusChart) {
+                chartInstances.statusChart.destroy();
+            }
+            
             chartInstances.statusChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['Approved', 'Pending', 'Rejected'],
                     datasets: [{
-                        data: [approved, pending, rejected],
+                        data: [num_of_approved || 0, num_of_pending || 0, num_of_rejectied || 0],
                         backgroundColor: ['#38a169', '#ecc94b', '#e53e3e'],
                         borderWidth: 3,
                         borderColor: '#fff'
@@ -3668,28 +3316,57 @@ populateFeedbackTable();
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { padding: 20, font: { size: 13, weight: 'bold' } } }
+                        legend: { position: 'bottom', labels: { padding: 20, font: { size: 13 } } }
                     }
                 }
             });
         }
-        
-        function createDepartmentChart(data) {
-            const deptCounts = {};
-            data.forEach(c => {
-                deptCounts[c.department] = (deptCounts[c.department] || 0) + 1;
-            });
+  ////////////////////////////////////////////////////////////////////////////////      
+    async function loadCaseByDepartmentStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/case_by_department/${studentId}`);
+        const result = await response.json();
 
-            const ctx = document.getElementById('departmentChart').getContext('2d');
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const list_Departments = result["list_Departments"] || 0;
+            const list_number_cases = result["list_number_cases"] || 0;
+
+            console.log("list_Departments:", list_Departments, "list_number_cases:", list_number_cases);
+            createDepartmentChart(list_Departments,list_number_cases)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}      
+        
+        function createDepartmentChart(list_Departments,list_number_cases) {
+            
+            const canvas = document.getElementById('departmentChart');
+            if (!canvas) {
+                console.error('Department chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.departmentChart) {
+                chartInstances.departmentChart.destroy();
+            }
+            
             chartInstances.departmentChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: Object.keys(deptCounts),
+                    labels: list_Departments,
                     datasets: [{
                         label: 'Cases by Department',
-                        data: Object.values(deptCounts),
+                        data: list_number_cases,
                         backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderRadius: 10,
+                        borderRadius: 6,
                         borderWidth: 2,
                         borderColor: 'rgba(102, 126, 234, 1)'
                     }]
@@ -3702,15 +3379,25 @@ populateFeedbackTable();
                 }
             });
         }
-        
+///////////////////////////////////////////////////////////////////////////////////////////        
         function createTrendChart(data) {
-            // Group data by month
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
             const approved = months.map(() => Math.floor(Math.random() * 30) + 10);
             const pending = months.map(() => Math.floor(Math.random() * 20) + 5);
             const rejected = months.map(() => Math.floor(Math.random() * 10) + 2);
 
-            const ctx = document.getElementById('trendChart').getContext('2d');
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) {
+                console.error('Trend chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.trendChart) {
+                chartInstances.trendChart.destroy();
+            }
             chartInstances.trendChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -3757,21 +3444,49 @@ populateFeedbackTable();
                 }
             });
         }
-        
-        function createTreatmentChart(data) {
-            const treatmentCounts = {};
-            data.forEach(c => {
-                const treatment = c.treatment || 'Unknown';
-                treatmentCounts[treatment] = (treatmentCounts[treatment] || 0) + 1;
-            });
+///////////////////////////////////////////////////////////////////////////////////////////////////// 
+        async function loadlTreatment(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/Treatment/${studentId}`);
+        const result = await response.json();
 
-            const ctx = document.getElementById('treatmentChart').getContext('2d');
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const list_Treatment = result["list_Treatment"] || [];
+            const list_number_cases = result["list_number_cases"] || 0;
+
+            console.log("list_Treatment:", list_Treatment, "list_number_cases:", list_number_cases);
+            createTreatmentChart(list_Treatment,list_number_cases)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}      
+
+
+        function createTreatmentChart(list_Treatment,list_number_cases) {
+
+            const canvas = document.getElementById('treatmentChart');
+            if (!canvas) {
+                console.error('Treatment chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.treatmentChart) {
+                chartInstances.treatmentChart.destroy();
+            }
             chartInstances.treatmentChart = new Chart(ctx, {
                 type: 'polarArea',
                 data: {
-                    labels: Object.keys(treatmentCounts),
+                    labels: list_Treatment,
                     datasets: [{
-                        data: Object.values(treatmentCounts),
+                        data: list_number_cases,
                         backgroundColor: [
                             'rgba(102, 126, 234, 0.7)',
                             'rgba(56, 161, 105, 0.7)',
@@ -3786,18 +3501,47 @@ populateFeedbackTable();
                 options: { responsive: true, maintainAspectRatio: false }
             });
         }
-        
-        function createGenderChart(data) {
-            const male = data.filter(c => c.gender === "Male").length;
-            const female = data.filter(c => c.gender === "Female").length;
+/////////////////////////////////////////////////////////////////////////////////////////
+       async function loadGenderStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/cases/${studentId}`);
+        const result = await response.json();
 
-            const ctx = document.getElementById('genderChart').getContext('2d');
-            chartInstances.genderChart = new Chart(ctx, {
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const females = result["num of Females"] || 0;
+            const males = result["num of Males"] || 0;
+
+            console.log("Males:", males, "Females:", females);
+            createGenderChart(males, females);
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}
+
+
+        function createGenderChart(males, females) {
+            const ctx = document.getElementById('genderChart');
+            
+            if (!ctx) {
+                console.error("Gender chart canvas not found!");
+                return;
+            }
+
+            if (chartInstances.genderChart) {
+                chartInstances.genderChart.destroy();
+            }
+
+            chartInstances.genderChart = new Chart(ctx.getContext('2d'), {
                 type: 'pie',
                 data: {
                     labels: ['Male', 'Female'],
                     datasets: [{
-                        data: [male, female],
+                        data: [males, females],
                         backgroundColor: ['#4facfe', '#f093fb'],
                         borderWidth: 3,
                         borderColor: '#fff'
@@ -3806,11 +3550,30 @@ populateFeedbackTable();
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { padding: 20, font: { size: 13, weight: 'bold' } } } }
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 13, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = males + females;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
                 }
             });
         }
-
+///////////////////////////////////////////////////////////////////////////////////
         // Add ripple animation keyframes
         const rippleStyle = document.createElement('style');
         rippleStyle.textContent = `
@@ -3835,6 +3598,7 @@ populateFeedbackTable();
                 }, 150);
             }
         });
+        
         populateFeedbackTable();
 
         // Initialize page with animation
@@ -3861,6 +3625,12 @@ populateFeedbackTable();
 
         window.addEventListener('resize', handleResize);
         handleResize();
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+            }
+        };
     </script>
 </body>
 </html>

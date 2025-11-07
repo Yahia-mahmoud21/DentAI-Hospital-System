@@ -52,7 +52,7 @@ def read_root(request: Request):
 def get_departments():
     conn = db_connect()
     cursor = conn.cursor()
-    cursor.execute("SELECT name FROM department where department_id != 'D001';")
+    cursor.execute("SELECT name FROM department where department_id != 'd001';")
     departments = [row[0] for row in cursor.fetchall()]
     conn.close()
     return departments
@@ -562,7 +562,7 @@ def get_patients_all():
                s.appointment_date, s.description
         from student_department_cases as s 
         join cases as c on s.case_id = c.case_id 
-        where s.student_id is null and s.department_id != 'D001';
+        where s.student_id is null and s.department_id != 'd001';
     """)
     
     rows = cursor.fetchall()
@@ -710,65 +710,65 @@ async def edit_case(
 
 
 
-model_name = "SciReason-LFM2-2.6B"
+# model_name = "SciReason-LFM2-2.6B"
 
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    device_map="auto",
-    torch_dtype=torch.float16
-)
-model.eval()
+# tokenizer = AutoTokenizer.from_pretrained(model_name)
+# model = AutoModelForCausalLM.from_pretrained(
+#     model_name,
+#     device_map="auto",
+#     torch_dtype=torch.float16
+# )
+# model.eval()
 
-class AiDiagnosis(BaseModel):
-    prompt: str
+# class AiDiagnosis(BaseModel):
+#     prompt: str
 
-def build_prompt(prompt):
-    return prompt
+# def build_prompt(prompt):
+#     return prompt
 
-@app.post("/api/ai/diagnosis/stream")
-def ai_diagnosis_stream(data: AiDiagnosis):
-    messages = [
-        {"role": "user", "content": build_prompt(data.prompt)}
-    ]
+# @app.post("/api/ai/diagnosis/stream")
+# def ai_diagnosis_stream(data: AiDiagnosis):
+#     messages = [
+#         {"role": "user", "content": build_prompt(data.prompt)}
+#     ]
 
-    # تجهيز الإدخال
-    inputs = tokenizer.apply_chat_template(
-        messages,
-        add_generation_prompt=True,
-        tokenize=True,
-        return_tensors="pt",
-        return_dict=True
-    ).to(model.device)
+#     # تجهيز الإدخال
+#     inputs = tokenizer.apply_chat_template(
+#         messages,
+#         add_generation_prompt=True,
+#         tokenize=True,
+#         return_tensors="pt",
+#         return_dict=True
+#     ).to(model.device)
 
-    # Streamer لإخراج التوكنات أثناء التوليد
-    streamer = TextIteratorStreamer(
-        tokenizer,
-        skip_prompt=True,
-        skip_special_tokens=True
-    )
+#     # Streamer لإخراج التوكنات أثناء التوليد
+#     streamer = TextIteratorStreamer(
+#         tokenizer,
+#         skip_prompt=True,
+#         skip_special_tokens=True
+#     )
 
-    # تشغيل التوليد في Thread منفصل
-    generation_thread = Thread(
-        target=model.generate,
-        kwargs=dict(
-            **inputs,
-            max_new_tokens=800,
-            do_sample=True,
-            temperature=0.7,
-            top_p=0.9,
-            streamer=streamer
-        )
-    )
-    generation_thread.start()
+#     # تشغيل التوليد في Thread منفصل
+#     generation_thread = Thread(
+#         target=model.generate,
+#         kwargs=dict(
+#             **inputs,
+#             max_new_tokens=800,
+#             do_sample=True,
+#             temperature=0.7,
+#             top_p=0.9,
+#             streamer=streamer
+#         )
+#     )
+#     generation_thread.start()
 
-    # دالة generator تبعت التوكنات لحظة بلحظة
-    def token_stream():
-        for new_text in streamer:
-            yield new_text  # 👈 كل توكن يتبعت أول بأول
+#     # دالة generator تبعت التوكنات لحظة بلحظة
+#     def token_stream():
+#         for new_text in streamer:
+#             yield new_text  # 👈 كل توكن يتبعت أول بأول
 
-    # إرجاع StreamResponse للـ frontend
-    return StreamingResponse(token_stream(), media_type="text/plain")
+#     # إرجاع StreamResponse للـ frontend
+#     return StreamingResponse(token_stream(), media_type="text/plain")
 
 
 _MODEL_CACHE = {
@@ -1351,6 +1351,371 @@ async def college_round_delete(round_id: str):
 
 
 
+## Analatical for student
+
+@app.get("/api/home/analyize/cases/{student_id}")
+def num_of_gender(student_id: str):
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT 
+                c.gender,
+                COUNT(c.gender) AS total_gender
+            FROM cases c
+            JOIN student_department_cases sdc
+                ON c.case_id = sdc.case_id
+            JOIN student s
+                ON s.student_id = sdc.student_id
+            WHERE s.student_id = ?
+            GROUP BY c.gender;
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        num_male = 0
+        num_female = 0
+
+        for gender, count in rows:
+            if gender and gender.upper().startswith("M"):
+                num_male = count
+            elif gender and gender.upper().startswith("F"):
+                num_female = count
+
+        return {
+            "success": True,
+            "num of Males": num_male,
+            "num of Females": num_female
+        }
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        return {"success": False, "error": str(e)}
+
+
+
+
+
+
+
+
+@app.get("/api/home/analyize/checked/{student_id}")
+def num_check_of_case(student_id: str):
+    
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+             SELECT 
+                sdc.checked,
+                COUNT(sdc.checked) 
+     
+            FROM student_department_cases sdc
+            JOIN student s
+                ON s.student_id = sdc.student_id
+            WHERE s.student_id = ?
+            GROUP BY sdc.checked
+			ORDER by sdc.checked;
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            num_of_pending= rows[0][1]
+            num_of_rejectied= rows[1][1]
+            num_of_approved= rows[2][1]
+
+            return {
+                "success": True,
+                "num_of_pending": num_of_pending,
+                "num_of_rejectied": num_of_rejectied,
+                "num_of_approved": num_of_approved,
+                 }
+        else:
+
+            return {
+             "success": True,
+                 "num_of_pending": 0,
+                 "num_of_rejectied": 0,
+                "num_of_approved": 0,
+                }
+
+
+
+
+
+
+
+
+
+
+@app.get("/api/home/analyize/case_by_department/{student_id}")
+def num_check_of_case(student_id: str):
+        list_Departments=[]
+        list_number_cases=[]
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+              SELECT 
+                d.name,
+                COUNT(sdc.case_id) 
+     
+            FROM student_department_cases sdc
+            JOIN student s
+                ON s.student_id = sdc.student_id
+			join department d
+			on d.department_id=sdc.department_id
+            WHERE s.student_id = ?
+            GROUP BY sdc.department_id
+			ORDER by sdc.department_id;
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            for row in rows:
+                list_Departments.append(row[0])
+                list_number_cases.append(row[1])
+
+            return {
+                "success": True,
+                "list_Departments": list_Departments,
+                "list_number_cases": list_number_cases,
+                 }
+        else:
+
+            return {
+             "success": False,
+                }
+
+
+
+@app.get("/api/home/analyize/Treatment/{student_id}")
+def num_check_of_case(student_id: str):
+        list_Treatment=[]
+        list_number_cases=[]
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT 
+        LOWER(sdc.treatment) AS treatment,
+        COUNT(*) AS total
+    FROM student_department_cases sdc
+    JOIN student s
+        ON s.student_id = sdc.student_id
+    WHERE s.student_id = ? 
+      AND sdc.treatment IS NOT NULL
+      AND TRIM(sdc.treatment) != ""
+      AND LOWER(sdc.treatment) != "unkown"
+    GROUP BY LOWER(sdc.treatment)
+    ORDER BY total DESC;
+        """, (student_id,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            for row in rows:
+                list_Treatment.append(row[0])
+                list_number_cases.append(row[1])
+
+            return {
+                "success": True,
+                "list_Treatment": list_Treatment,
+                "list_number_cases": list_number_cases,
+                 }
+        else:
+
+            return {
+             "success": False,
+                }
+
+
+
+## Analatical for doctor
+
+@app.get("/api/home/analyize_doctor/cases/{doctorID}")
+def num_of_gender(doctorID: str):
+    try:
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+           SELECT 
+    c.gender,
+    COUNT(c.gender) AS total_gender
+FROM cases c
+JOIN student_department_cases sdc
+    ON c.case_id = sdc.case_id
+JOIN faculty_members fm
+    ON fm.department_id = sdc.department_id
+WHERE fm.faculty_members_id = ?
+GROUP BY c.gender;
+
+        """, (doctorID,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        num_male = 0
+        num_female = 0
+
+        for gender, count in rows:
+            if gender and gender.upper().startswith("M"):
+                num_male = count
+            elif gender and gender.upper().startswith("F"):
+                num_female = count
+
+        return {
+            "success": True,
+            "num of Males": num_male,
+            "num of Females": num_female
+        }
+
+    except sqlite3.Error as e:
+        print("Database error:", e)
+        return {"success": False, "error": str(e)}
+
+
+
+
+
+
+@app.get("/api/home/analyize/checked_doctor/{doctorID}")
+def num_check_of_case(doctorID: str):
+    
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+             SELECT 
+                sdc.checked,
+                COUNT(sdc.checked) 
+     
+            FROM student_department_cases sdc
+            JOIN faculty_members fm
+                ON fm.department_id = sdc.department_id
+            WHERE fm.faculty_members_id = ?
+            GROUP BY sdc.checked
+			ORDER by sdc.checked;
+        """, (doctorID,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            num_of_pending= rows[0][1]
+            num_of_rejectied= rows[1][1]
+            num_of_approved= rows[2][1]
+
+            return {
+                "success": True,
+                "num_of_pending": num_of_pending,
+                "num_of_rejectied": num_of_rejectied,
+                "num_of_approved": num_of_approved,
+                 }
+        else:
+
+            return {
+             "success": True,
+                 "num_of_pending": 0,
+                 "num_of_rejectied": 0,
+                "num_of_approved": 0,
+                }
+
+
+
+@app.get("/api/home/analyize/case_by_department_doctor/{doctorID}")
+def num_check_of_case(doctorID: str):
+        list_Departments=[]
+        list_number_cases=[]
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+             SELECT 
+    s.name AS student_name,
+    COUNT(sdc.case_id) AS total_cases
+FROM student_department_cases sdc
+JOIN faculty_members fm ON fm.department_id = sdc.department_id
+JOIN student s ON s.student_id = sdc.student_id
+WHERE fm.faculty_members_id = ?
+GROUP BY s.name, s.student_id
+ORDER BY s.student_id;
+        """, (doctorID,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            for row in rows:
+                list_Departments.append(row[0])
+                list_number_cases.append(row[1])
+
+            return {
+                "success": True,
+                "list_Departments": list_Departments,
+                "list_number_cases": list_number_cases,
+                 }
+        else:
+
+            return {
+             "success": False,
+                }
+        
+
+@app.get("/api/home/analyize/Treatment_doctor/{doctorID}")
+def num_check_of_case(doctorID: str):
+        list_Treatment=[]
+        list_number_cases=[]
+        conn = sqlite3.connect("dental_project_DB.db")
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT 
+        LOWER(sdc.treatment) AS treatment,
+        COUNT(*) AS total
+    FROM student_department_cases sdc
+    JOIN faculty_members fm
+        ON fm.department_id = sdc.department_id
+    WHERE fm.faculty_members_id = ? 
+      AND sdc.treatment IS NOT NULL
+      AND TRIM(sdc.treatment) != ""
+      AND LOWER(sdc.treatment) != "unkown"
+    GROUP BY LOWER(sdc.treatment)
+    ORDER BY total DESC;
+        """, (doctorID,))
+
+        rows = cursor.fetchall()
+        conn.close()
+
+        
+        if rows :
+            for row in rows:
+                list_Treatment.append(row[0])
+                list_number_cases.append(row[1])
+
+            return {
+                "success": True,
+                "list_Treatment": list_Treatment,
+                "list_number_cases": list_number_cases,
+                 }
+        else:
+
+            return {
+             "success": False,
+                }
 
 
 

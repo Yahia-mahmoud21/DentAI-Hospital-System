@@ -448,7 +448,7 @@
                 </div>
                 
                 <button class="bg-gradient-to-r from-[#0939db] to-[#90caf9] text-white px-6 py-2 rounded-full hover:shadow-lg transition-all">
-                    <a href="/book">Book Appointment</a>
+                    <a href="/secretary/login">Secretary</a>
                 </button>
             </div>
         </div>
@@ -462,8 +462,8 @@
         <h1 class="hero-title">
             <span class="accent">We create the world's smiles.</span>
         </h1>
-        <button class="btn-primary">
-                <a href="/book">Book Appointment</a>
+        <button class="btn-primary" onclick="openAttendanceModal()">
+                <a >Book Online Appointment</a>
 
         </button>
         <p>&nbsp;</p>
@@ -629,14 +629,7 @@
                 <div class="form-group">
                     <label class="form-label">Phone Number</label>
                     <input type="tel" class="form-input" id="phoneNumber" name="phoneNumber" placeholder="Enter Phone Number" required>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">complaint</label>
-                    <input type="text" class="form-input" id="sick" name="sick" placeholder="Enter your complaint" required>
-                </div>
-
-                
+                </div>                
 
                 <button type="submit" class="save-btn">
                     <i class="fas fa-save"></i>
@@ -733,7 +726,7 @@
     }
 };
 
- async function regestration(patientName,patientAge, gender, phoneNumber, sick){
+ async function regestration(patientName,patientAge, gender, phoneNumber){
         const response = await fetch( API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.CASE,
         
         {
@@ -741,7 +734,7 @@
             headers : {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({ patientName,patientAge, gender, phoneNumber, sick })  // البيانات اللي هتتبعت للباك إند
+            body: JSON.stringify({ patientName,patientAge, gender, phoneNumber })  // البيانات اللي هتتبعت للباك إند
         }
         
         
@@ -761,7 +754,6 @@
     patientAge: parseInt(formData.get('patientAge')),  // ✅ تحويل لرقم
     gender: formData.get('gender'),
     phoneNumber: formData.get('phoneNumber'),
-    sick: formData.get('sick')
 };
         console.log(appointmentData)
 
@@ -770,8 +762,7 @@
                 appointmentData.patientName,
                 appointmentData.patientAge,
                 appointmentData.gender,
-                appointmentData.phoneNumber,
-                appointmentData.sick
+                appointmentData.phoneNumber
                 
             );
 
