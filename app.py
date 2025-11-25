@@ -88,7 +88,7 @@ def collge(request: Request):
 # Render the patient page
 @app.get("/patient", response_class=HTMLResponse)
 def patient(request: Request):
-    return templates.TemplateResponse("patient.html", {"request": request})
+    return templates.TemplateResponse("patient copy.html", {"request": request})
 
 
 # Render the book page
@@ -359,7 +359,7 @@ def api_login_patient(data: LoginPatientModel):
         cursor = conn.cursor()
         case_Id = int(data.Id)
         case_Name = data.Name
-        cursor.execute("SELECT case_id, name FROM cases WHERE case_id = ? AND name = ?", (case_Id, case_Name))
+        cursor.execute("SELECT case_id, phone FROM cases WHERE case_id = ? AND phone = ?", (case_Id, case_Name))
         result = cursor.fetchone()
         conn.close()
 
@@ -729,7 +729,7 @@ async def edit_case(
 # @app.post("/api/ai/diagnosis/stream")
 # def ai_diagnosis_stream(data: AiDiagnosis):
 #     messages = [
-#         {"role": "user", "content": build_prompt(data.prompt)}
+#         {"role": "user", "content": f"{build_prompt(data.prompt)}, with short answer"}
 #     ]
 
 #     # تجهيز الإدخال
