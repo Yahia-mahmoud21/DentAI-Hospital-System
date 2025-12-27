@@ -19,6 +19,15 @@ The system creates a seamless ecosystem that:
 The platform incorporates two core AI-driven components:
 
 ###  Deep-Learning Image Classification Model
+#### The model Architecture :
+
+- **Restnet 50 (pre trained)**
+- Classification Head
+<br>
+![System Overview](photos/ARCH.png)
+
+
+
 Assists in diagnosing **six dental conditions** with high accuracy:
 - **Calculus** (الجير)
 - **Caries** (التسوس)
