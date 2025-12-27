@@ -23,10 +23,14 @@ The platform incorporates two core AI-driven components:
 
 - **Restnet 50 (pre trained)**
 - Classification Head
-<br>
+
 ![System Overview](photos/ARCH.png)
 
+#### Model accuracy:
+- Train accuracy :  94.17%
+- Train accuracy : 90.83%
 
+![System Overview](photos/ACC.png)
 
 Assists in diagnosing **six dental conditions** with high accuracy:
 - **Calculus** (الجير)
@@ -107,6 +111,8 @@ Students are distributed across **10 medical departments**.
 - **Secure Access:** Login using Patient ID or Phone Number  
 - **Digital Health Records:** View diagnosis and treatment history  
 - **Downloadable Reports:** Generate and download medical reports as **PDF files**  
+
+![System Overview](photos/patient.png)
 
 ---
 
