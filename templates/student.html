@@ -1,0 +1,3636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/5.1.1/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #FAFBFC;
+            overflow-x: hidden;
+        }
+
+        /* CSS Custom Properties */
+        :root {
+            --primary-blue: #007BFF;
+            --primary-blue-light: #F0F7FF;
+            --primary-blue-dark: #0056B3;
+            --success-green: #28A745;
+            --danger-red: #DC3545;
+            --warning-yellow: #FFC107;
+            --light-gray: #F8F9FA;
+            --medium-gray: #6C757D;
+            --dark-gray: #343A40;
+            --sidebar-collapsed: 60px;
+            --sidebar-expanded: 240px;
+            --patient-queue-width: 304px;
+        }
+
+         /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            width: var(--sidebar-collapsed);
+            background: var(--light-gray);
+            border-right: 1px solid #E9ECEF;
+            z-index: 1000;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .sidebar.expanded {
+            width: var(--sidebar-expanded);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #E9ECEF;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar.expanded .sidebar-header {
+            justify-content: flex-start;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-blue);
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .logo {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar-nav {
+            padding: 50px 0;
+        }
+
+        .sidebar-item {
+            position: relative;
+            margin: 30px 15px;
+            cursor: pointer;
+        }
+
+        .sidebar-icon {
+            
+            align-items: center;
+            justify-content: center;
+            width: 220px;
+            height: 38px;
+            border-radius: 12px;
+            font-size: 21px;
+            color: var(--medium-gray);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            
+        }
+
+        .sidebar-icon:hover {
+            transform: scale(1.05);
+            background-color: rgba(0, 123, 255, 0.1);
+            color: var(--primary-blue);
+        }
+
+        .sidebar-icon.active {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+            transform: translateX(2px);
+        }
+
+        .sidebar-icon.active::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--primary-blue);
+            border-radius: 0 2px 2px 0;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { height: 0; }
+            to { height: 100%; }
+        }
+
+        .sidebar-text {
+            margin-left: 16px;
+            font-weight: 500;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.2s ease;
+        }
+
+        .sidebar.expanded .sidebar-text {
+            opacity: 1;
+            transform: translateX(0);
+            transition-delay: 0.1s;
+        }
+
+        .sidebar.expanded .sidebar-icon {
+            justify-content: flex-start;
+            padding-left: 12px;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .tooltip {
+            position: absolute;
+            left: 60px;
+            top: 50%;
+            transform: translateY(-50%) translateX(-10px);
+            background: var(--dark-gray);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .tooltip::before {
+            content: '';
+            position: absolute;
+            right: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 6px solid transparent;
+            border-right-color: var(--dark-gray);
+        }
+
+        .sidebar:not(.expanded) .sidebar-item:hover .tooltip {
+            opacity: 1;
+            transform: translateY(-50%) translateX(0);
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle {
+            position: absolute;
+            top: 28px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #E9ECEF;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: var(--medium-gray);
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .sidebar-toggle:hover {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+        /* Patient Queue Panel */
+        .patient-queue {
+             position: fixed;
+            left: var(--sidebar-collapsed);
+            top: 0;
+            width: var(--patient-queue-width);
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #E9ECEF;
+            border-left: 1px solid #E9ECEF;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+
+
+        .sidebar.expanded + .patient-queue {
+            left: var(--sidebar-expanded);
+        }
+         .patient-queue.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+       
+        .queue-header {
+            padding: 24px;
+            border-bottom: 1px solid #E9ECEF;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .queue-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .queue-subtitle {
+            font-size: 14px;
+            color: var(--medium-gray);
+        }
+
+        .patient-list {
+            padding: 16px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        .patient-card {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border: 1px solid #E9ECEF;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .patient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+        }
+
+        .patient-card.active {
+            border: 2px solid var(--primary-blue);
+            background: var(--primary-blue-light);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.1);
+        }
+
+        .patient-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 20px;
+            padding-bottom : 4px;
+            margin-right: 16px;
+            flex-shrink: 0;
+        }
+
+        .patient-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .patient-name {
+            
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 4px;
+        }
+
+        .patient-date {
+            font-size: 14px;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: var(--success-green);
+            color: white;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: calc(var(--sidebar-collapsed) );
+            padding: 24px;
+            min-height: 100vh;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar.expanded ~ .main-content {
+            margin-left: calc(var(--sidebar-expanded) );
+        }
+
+        /* Main content adjustments when patient queue is shown */
+        .main-content.with-patient-queue {
+            margin-left: calc(var(--sidebar-collapsed) + var(--patient-queue-width));
+        }
+
+        .sidebar.expanded ~ .main-content.with-patient-queue {
+            margin-left: calc(var(--sidebar-expanded) + var(--patient-queue-width));
+        }
+
+
+        /* Page Sections */
+        .page-section {
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+        }
+
+        .page-section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Page Headers */
+        .page-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-left: 16px;
+        }
+
+        .page-header i {
+            font-size: 32px;
+            color: var(--primary-blue);
+        }
+
+        /* Patient Details Header */
+        .patient-header {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            display: flex;
+            align-items: center;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .patient-header-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-dark));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 32px;
+            margin-right: 24px;
+        }
+
+        .patient-header-info h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .member-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: var(--primary-blue);
+            color: white;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Content Grid */
+        .content-grid {
+            display: grid;
+            gap: 24px;
+            animation: fadeInUp 0.6s ease 0.2s both;
+        }
+
+        .content-column {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Information Cards */
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-gray);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary-blue);
+        }
+        .card-title.AI {
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 2px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title.AI i {
+            color: rgb(184, 219, 255);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field.full-width {
+            grid-column: span 2;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--medium-gray);
+            margin-bottom: 4px;
+        }
+
+        .form-value {
+            font-size: 16px;
+            color: var(--dark-gray);
+            padding: 8px 0;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 24px;
+            color: white;
+        }
+
+        .stat-icon.blue { background: var(--primary-blue); }
+        .stat-icon.green { background: var(--success-green); }
+        .stat-icon.orange { background: #FF9800; }
+        .stat-icon.purple { background: #9C27B0; }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: var(--medium-gray);
+            font-weight: 500;
+        }
+
+        /* Calendar styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #E9ECEF;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day {
+            background: white;
+            padding: 16px;
+            min-height: 100px;
+            position: relative;
+        }
+
+        .calendar-day.other-month {
+            background: #F8F9FA;
+            color: #CED4DA;
+        }
+
+        .calendar-day.today {
+            background: var(--primary-blue-light);
+            color: var(--primary-blue);
+            font-weight: 600;
+        }
+
+        .calendar-event {
+            background: var(--primary-blue);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        /* Action buttons */
+        .action-btn {
+            
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn.primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: var(--dark-gray);
+            border: 1px solid #E9ECEF;
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--light-gray);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1199px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-field.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: var(--sidebar-expanded);
+            }
+            
+            .sidebar.expanded {
+                transform: translateX(0);
+            }
+            
+            .patient-queue {
+                left: 0;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .patient-queue.show {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+        }
+         /* Dental History Table */
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .history-table th {
+            text-align: left;
+            padding: 12px;
+            background: var(--light-gray);
+            color: var(--medium-gray);
+            font-weight: 500;
+            font-size: 14px;
+            border-bottom: 1px solid #E9ECEF;
+        }
+
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #F1F3F4;
+            color: var(--dark-gray);
+        }
+
+        .history-table tr:hover {
+            background: var(--light-gray);
+        }
+
+        .payment-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .payment-status.paid {
+            background: #D4EDDA;
+            color: #155724;
+        }
+
+        .payment-status.pending {
+            background: #FFF3CD;
+            color: #856404;
+        }
+
+        .payment-status.overdue {
+            background: #F8D7DA;
+            color: #721C24;
+        }
+         .table-container {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #f9fafb;
+            padding: 1rem 1.5rem;
+            text-align: left;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            transition: all 0.2s ease;
+        }
+
+        tr:hover {
+            background: #eff6ff;
+        }
+
+        tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tr:nth-child(even):hover {
+            background: #eff6ff;
+        }
+
+        /* Attendance Rate */
+        .attendance-rate {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+        }
+
+        .status-dot.high {
+            background: #10b981;
+        }
+
+        .status-dot.medium {
+            background: #f59e0b;
+        }
+
+        .status-dot.low {
+            background: #ef4444;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+        }
+
+        .status-icon.good {
+            color: #10b981;
+        }
+
+        .status-icon.warning {
+            color: #ef4444;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .action-btn.view {
+            color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .action-btn.view:hover {
+            background: #dbeafe;
+        }
+
+        .action-btn.edit {
+            color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .action-btn.edit:hover {
+            background: #d1fae5;
+        }
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.226);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-btn:hover {
+            color: #6b7280;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group.dep{
+            display: none;
+            margin-bottom: 1rem;
+        }
+
+        .form-group.calendar{
+            display: none;
+            margin-bottom: 1rem;
+        }
+
+        .form-group .img {
+                width: 100%;             
+                max-height: 250px;       
+                object-fit: contain;     
+                border-radius: 0.75rem;  
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+                margin-top: 0.5rem;
+                display: block;
+            }
+
+            .img:hover {
+    transform: scale(1.02);
+}
+
+/* Modal for image preview */
+.image-modal {
+    display: none; 
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.image-modal.active {
+    display: flex;
+}
+
+.image-modal img {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 1rem;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+}
+
+.image-modal .close-image {
+    position: absolute;
+    top: 15px;
+    right: 25px;
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+}
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        .d-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            height: 70px;
+        }
+
+        .d-input:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: #2563eb;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            background: #1d4ed8;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        }
+
+       .photo-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #6f99f3;
+    color: white;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  .photo-btn:hover {
+    background: #1d4ed8;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .photo-btn.uploaded {
+    background: #28a745 !important;
+    color: #fff !important;
+  }
+                    
+        .approval-ok {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #D4EDDA;
+            color: #155724;
+            margin: 25px;
+            }
+
+            .approval-pending {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #FFF3CD;
+            color: #856404;
+            margin: 20px;
+            }
+
+            .approval-no {
+           display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 500;
+            background: #F8D7DA;
+            color: #971825;
+            margin: 25px;
+
+
+            }
+            .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            height: 50px;
+            }
+
+            .form-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            }
+                     .ai-container {
+            background: white;
+            border-radius: 24px;
+            padding: 3rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .typing-label {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #667eea15, #4b69a215);
+            border-radius: 16px;
+            border-left: 5px solid #2066ff;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .typing-text {
+            font-size: 1.3rem;
+            color: #4a5568;
+            font-weight: 500;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .drop-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #f7fafc, #edf2f7);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .drop-zone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .drop-zone:hover::before {
+            left: 100%;
+        }
+
+        .drop-zone:hover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(102, 126, 234, 0.2);
+        }
+
+        .drop-zone.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea20, #764ba220);
+            border-style: solid;
+            transform: scale(1.02);
+            box-shadow: 0 16px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .drop-zone-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .drop-zone-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+
+        .drop-zone h3 {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .drop-zone p {
+            font-size: 1rem;
+            color: #718096;
+            margin-bottom: 0.5rem;
+        }
+
+        .supported-formats {
+            font-size: 0.85rem;
+            color: #a0aec0;
+            margin-top: 1rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            padding: 14px 36px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            margin-top: 1.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .upload-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .preview-container {
+            margin: 2.5rem 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+            display: none;
+        }
+
+        .preview-container.show {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .preview-card {
+            background: #f7fafc;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .preview-title i {
+            color: #667eea;
+        }
+
+        .clear-btn {
+            background: #fc8181;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #f56565;
+            transform: scale(1.05);
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            display: block;
+            margin: 0 auto;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            border: none;
+            padding: 14px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.5);
+        }
+
+        .analyze-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .loading-container {
+            display: none;
+            text-align: center;
+            padding: 3rem 2rem;
+        }
+
+        .loading-container.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1rem;
+        }
+
+        .typing-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        .typing-dot:nth-child(3) { animation-delay: 0s; }
+
+        .result-container {
+            display: none;
+            margin-top: 2.5rem;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #667eea10, #764ba210);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border-left: 6px solid #667eea;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-title {
+            font-size: 1.6rem;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .result-title i {
+            color: #667eea;
+            font-size: 1.8rem;
+        }
+
+        .result-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        .diagnosis-badge {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .confidence-bar {
+            margin-top: 1.5rem;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            color: #4a5568;
+            font-weight: 500;
+        }
+
+        .confidence-progress {
+            width: 100%;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 10px;
+            transition: width 1s ease;
+            animation: fillProgress 1s ease;
+        }
+
+        .result-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #4a5568;
+            margin-top: 1rem;
+        }
+
+      
+        
+        .error-message {
+            background: linear-gradient(135deg, #fc818120, #f5656520);
+            border: 2px solid #fc8181;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            color: #c53030;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .error-message i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+            40% { transform: scale(1.2); opacity: 1; }
+        }
+
+        @keyframes fillProgress {
+            from { width: 0; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .ai-container {
+                padding: 2rem 1.5rem;
+            }
+            
+            .drop-zone {
+                padding: 3rem 1.5rem;
+            }
+
+            .drop-zone-icon {
+                width: 80px;
+                height: 80px;
+            }
+
+           
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes blink {
+            0%, 50% { border-color: #4fc3f7; }
+            51%, 100% { border-color: transparent; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+.result-container {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    display: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-response {
+    line-height: 1.6;
+    color: #333;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.ai-response * {
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.ai-response h1:first-child,
+.ai-response h2:first-child,
+.ai-response h3:first-child,
+.ai-response p:first-child {
+    margin-top: 0;
+}
+
+.ai-response ul, .ai-response ol {
+    padding-left: 25px;
+    margin-bottom: 15px;
+}
+
+.ai-response li {
+    margin-bottom: 5px;
+}
+
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">DentAI</div>
+        </div>
+        <div class="sidebar-nav">
+            <div class="sidebar-item">
+                <div class="sidebar-icon active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </div>
+                <div class="tooltip">Dashboard</div>
+            </div>
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="patients">
+                    <i class="fas fa-users"></i>
+                    <span class="sidebar-text">Patients</span>
+                </div>
+                <div class="tooltip">Patients</div>
+            </div>
+           <div class="sidebar-item">
+                <div class="sidebar-icon">
+                    <a href="/AI" target="_blank" style="text-decoration: none;">
+                        <i class="fa-solid fa-brain"></i>
+                        <span class="sidebar-text">AI Models</span>
+                    </a>
+                </div>
+               
+            </div>
+
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span class="sidebar-text">Reports</span>
+                </div>
+                <div class="tooltip">Reports</div>
+            </div>
+            <div class="sidebar-item">
+                <div class="sidebar-icon" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span class="sidebar-text">Settings</span>
+                </div>
+                <div class="tooltip">Settings</div>
+            </div>
+        </div>
+        <div class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    </nav>
+
+    <!-- Patient Queue Panel -->
+    <div class="patient-queue" id="patientQueue">
+        <div class="queue-header">
+            <div class="queue-title">Patient Queue</div>
+            <div class="queue-subtitle">12 patients today</div>
+        </div>
+        <div class="patient-list">
+            <div class="patient-card active" data-patient="sarah-johnson">
+                 <div class="patient-avatar"></div>
+                <div class="patient-info">
+                  
+                    <div class="patient-name"></div>
+                    <div class="patient-date"></div>
+                </div>
+            </div>
+           
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="main-content" id="mainContent">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="page-section active">
+             <div class="page-header">
+              <i class="fa-solid fa-circle-user"></i>
+                <h1 id="studentNameHead"></h1>
+            </div>
+            <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">ID</div>
+                                <div class="form-value" id="studentIDHead"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Batch</div>
+                                <div class="form-value" id="studentBatchHead"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Department</div>
+                                <div class="form-value" id="studentdepartmentHead"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <div class="form-value" id="studentEmailHead"></div>
+                            </div>
+                        </div>
+                    </div>
+           
+            
+
+            <!-- <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Total Patients</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Today's Appointments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-number">1</div>
+                    <div class="stat-label">Pending Approvals</div>
+                </div>
+                
+            </div> -->
+
+           <!-- Dental History -->
+        <div id="feedback" class="content-section">
+            
+            <div class="table-container">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>description</th>
+                                <th>Approval</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="feedbackTable">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- View Feedback Modal -->
+<div id="viewModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">View Patient</h4>
+      <button class="close-btn" onclick="closeModal('viewModal')">&times;</button>
+    </div>
+
+    <form>
+      <div class="form-group">
+        <label  class="form-label">Case ID</label>
+        <input type="text" class="form-input" id="viewPatientid" readonly>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="before-upload">Before Photo</label>
+        <img src="" class="img" id="previewImg">
+        </div>
+
+        <!-- Image modal -->
+        <div class="image-modal" id="imageModal">
+            <span class="close-image" id="closeImage">&times;</span>
+            <img id="modalImg" src="">
+        </div>
+
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea type="text" class="d-input" id="viewdescription" readonly ></textarea>
+      </div>
+
+      <div class="form-group after_view">
+        <label class="form-label" for="after-upload">after Photo</label>
+        <img src="" class="img" id="previewImgAfter">
+        </div>
+
+      <div class="form-group treatment_view">
+        <label class="form-label">treatment</label>
+        <input type="text" class="form-input" id="viewTreatment" readonly>
+      </div>
+
+      <div class="form-group department_view">
+        <label class="form-label">department</label>
+        <input type="text" class="form-input" id="viewDepartment" readonly>
+      </div>
+
+      <div class="form-group date_view">
+        <label class="form-label">date</label>
+        <input type="date" class="form-input" id="viewDate" readonly>
+      </div>
+
+      
+    </form>
+  </div>
+</div>
+
+
+<div id="notesModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">View Doctor Notes</h4>
+      <button class="close-btn" onclick="closeModal('notesModal')">&times;</button>
+    </div>
+
+    <form>
+      
+
+      <div class="form-group">
+        <label class="form-label">Doctor Notes</label>
+        <textarea type="text" class="d-input" id="ViewNotes" readonly ></textarea>
+      </div>
+
+     
+
+      
+    </form>
+  </div>
+</div>
+
+<!-- Edit Feedback Modal -->
+<div id="editModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4 class="modal-title">Edit Patient</h4>
+      <button class="close-btn" onclick="closeModal('editModal')">&times;</button>
+    </div>
+
+<form onsubmit="return postEditCase(event)">
+      <div class="form-group">
+        <label class="form-label">Case Id</label>
+        <input type="text" class="form-input" id="editPatientName">
+      </div>
+
+     <div class="form-group">
+  <label class="photo-btn" for="before-upload" data-default="Upload Before Photo">
+    Upload Before Photo
+  </label>
+  <input type="file" name="photo" id="before-upload">
+</div>
+
+
+      <div class="form-group">
+        <label class="form-label">description</label>
+        <textarea  type="" class="d-input" id="editPatientdis"></textarea>
+      </div>
+
+      
+   <div class="form-group after">
+  <label class="photo-btn" for="after-upload" data-default="Upload After Photo">
+    Upload After Photo
+  </label>
+  <input type="file" name="photo" id="after-upload">
+</div>
+
+      <div class="form-group treatment">
+        <label class="form-label">Treatment</label>
+        <input type="text" class="form-input" id="edittreatment">
+      </div>
+
+     <div class="form-group dep">
+    <label class="form-label">Department</label>
+    <select class="form-select" id="editDepartment">
+        {% for dep in departments %}
+            <option value="{{ dep }}">{{ dep }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+        <div class="form-group calendar">
+        <label class="form-label"> Date</label>
+        <input type="date" class="form-input" id="editDate">
+        </div>
+
+
+
+      <button type="submit" class="save-btn">
+        <i class="fas fa-save"></i> Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+
+        </div>
+
+        </div>
+                
+           
+        </section>
+
+        <!-- Patients Section -->
+        <section id="patients" class="page-section">
+            <!-- Patient Header -->
+            <div class="patient-header">
+                <div class="patient-header-avatar"></div>
+                <div class="patient-header-info">
+                    <h1></h1>
+                </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="content-grid">
+                <!-- Left Column -->
+                <div class="content-column">
+                    <!-- Basic Information -->
+                   <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user"></i>
+                            Basic Information
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">ID</div>
+                                <div class="form-value queue" id = "case_id"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Gender</div>
+                                <div class="form-value queue"></div>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Phone</div>
+                                <div class="form-value queue"></div>
+                            </div>
+
+                            <div class="form-field">
+                                <div class="form-label">Age</div>
+                                <div class="form-value queue" id="age_ai"></div>
+                            </div>
+
+                            <div class="form-field">
+                                <div class="form-label">complaint</div>
+                                <div class="form-value queue" id = "sick_ai"></div>
+                            </div>
+
+
+                            <div class="form-field">
+                            <div class="form-label">
+                               
+                                description 
+                            </div>
+                            <p></p>
+                        </div>
+
+                            
+                            <button id="addPatientBtn" class="action-btn primary">
+                                <i class="fas fa-file-medical"></i>
+                                Add Patient
+                            </button>
+                         
+                        </div>
+                    </div>
+
+                    <!-- Medical History -->
+                    
+                    
+                 
+   
+
+<!-- Add this result container after your button -->
+<div id="result-container" class="result-container">
+    <div class="typing-indicator" id="typing-indicator">
+        <i class="fa-solid fa-robot"></i>
+        <span>AI is analyzing</span>
+        <div class="typing-dots">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        </div>
+    </div>
+    <div id="ai-response" class="ai-response"></div>
+</div>
+                    <!-- Add this result container after your button -->
+                    
+                </div>
+
+                <!-- Right Column -->
+            </div>
+        </section>
+
+        <!-- Calendar Section -->
+        <section id="calendar" class="page-section">
+        <div class="page-header">
+            <i class="fas fa-tooth"></i>
+            <h1>AI Dental Classification</h1>
+        </div>
+        
+        <div class="ai-container">
+            <div class="typing-label">
+                <span class="typing-text" id="typingText">Upload a dental photograph for instant AI analysis</span>
+            </div>
+            
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-zone-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Drop your dental image here</h3>
+                <p>or click to browse from your device</p>
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i> Select Image
+                </button>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+            </div>
+            
+            <div class="preview-container" id="previewContainer">
+                <div class="preview-card">
+                    <div class="preview-header">
+                        <div class="preview-title">
+                            <i class="fas fa-image"></i>
+                            Image Preview
+                        </div>
+                        <button class="clear-btn" id="clearBtn">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                    <img id="previewImage" class="preview-image" alt="Preview">
+                    <button class="analyze-btn" id="analyzeBtn">
+                        <i class="fas fa-microscope"></i> Analyze Image
+                    </button>
+                </div>
+            </div>
+            
+            <div class="loading-container" id="loadingContainer">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Analyzing dental image...</div>
+                <div class="typing-indicator">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <div class="result-container" id="resultContainer">
+                <div class="result-card">
+                    <div class="result-title">
+                        <i class="fas fa-clipboard-check"></i>
+                        Diagnostic Results
+                    </div>
+                    <div class="result-content">
+                        <div class="diagnosis-badge" id="diagnosisBadge">Normal Tooth Structure</div>
+                        <div class="confidence-bar">
+                            <div class="confidence-label">
+                            </div>
+                          
+                        </div>
+                        <div class="result-text" id="resultText">
+                            The AI analysis indicates a healthy tooth structure with no visible signs of decay, fractures, or abnormalities. Regular dental check-ups are recommended for maintaining optimal oral health.
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                       
+                        <button class="action-btn secondary" id="newAnalysisBtn">
+                            <i class="fas fa-redo"></i> New Analysis
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="errorText">An error occurred. Please try again.</span>
+            </div>
+        </div>
+    </section>
+
+
+        <!-- Reports Section -->
+        <section id="reports" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-chart-bar"></i>
+                <h1>Reports & Analytics</h1>
+            </div>
+
+            <div class="stats-grid">
+                <!-- <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-number">89%</div>
+                    <div class="stat-label">Patient Satisfaction</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-number">+15%</div>
+                    <div class="stat-label">Monthly Growth</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-procedures"></i>
+                    </div>
+                    <div class="stat-number">342</div>
+                    <div class="stat-label">Treatments Completed</div>
+                </div> -->
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-number">4.8</div>
+                    <div class="stat-label">Average Rating</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                <div class="info-card">
+                    <div class="card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Cases by Status
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 320px;">
+                        <canvas id="statusChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <div class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Cases by Department
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 320px;">
+                        <canvas id="departmentChart"></canvas>
+                    </div>
+                </div>
+              
+                <div class="info-card">
+                    <div class="card-title">
+                        <i class="fas fa-users"></i>
+                        Gender Distribution
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 320px;">
+                        <canvas id="genderChart"></canvas>
+                    </div>
+                </div>
+               
+                <div class="info-card">
+                    <div class="card-title">
+                        <i class="fas fa-chart-area"></i>
+                        Treatment Of Cases 
+                    </div>
+                    <div class="chart-container" style="position: relative; height: 320px;">
+                        <canvas id="treatmentChart"></canvas>
+                    </div>
+                </div>
+                
+                
+                
+            </div>
+
+            <!-- <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Treatment Distribution
+                        </div>
+                        <p>Breakdown of different treatment types and their frequency over the selected period.</p>
+                        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Dental Cleaning</span>
+                                <span style="font-weight: 600;">45%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Root Canal</span>
+                                <span style="font-weight: 600;">25%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Filling</span>
+                                <span style="font-weight: 600;">20%</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Other</span>
+                                <span style="font-weight: 600;">10%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div> -->
+                <!-- <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-download"></i>
+                            Export Reports
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-pdf"></i>
+                                Monthly Report (PDF)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-excel"></i>
+                                Patient Data (Excel)
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-file-csv"></i>
+                                Financial Summary (CSV)
+                            </button>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="page-section">
+            <div class="page-header">
+                <i class="fas fa-cog"></i>
+                <h1>System Settings</h1>
+            </div>
+
+            <div class="content-grid">
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-user-cog"></i>
+                            Profile Settings
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <div class="form-label">Full Name</div>
+                                <input type="text" value="Dr. Sarah Medical" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Email</div>
+                                <input type="email" value="dr.sarah@clinic.com" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                            <div class="form-field full-width">
+                                <div class="form-label">Clinic Address</div>
+                                <input type="text" value="123 Medical Center, Health City" style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px;">
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px;">
+                            <button class="action-btn primary">
+                                <i class="fas fa-save"></i>
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-bell"></i>
+                            Notification Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>Email notifications for new appointments</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" checked style="width: 18px; height: 18px;">
+                                <span>SMS reminders for patients</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+                                <input type="checkbox" style="width: 18px; height: 18px;">
+                                <span>Weekly summary reports</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-column">
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-shield-alt"></i>
+                            Security Settings
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <button class="action-btn secondary">
+                                <i class="fas fa-key"></i>
+                                Change Password
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-mobile-alt"></i>
+                                Setup 2FA
+                            </button>
+                            <button class="action-btn secondary">
+                                <i class="fas fa-history"></i>
+                                Login History
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-title">
+                            <i class="fas fa-palette"></i>
+                            Appearance
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="form-field">
+                                <div class="form-label">Theme</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>Light Mode</option>
+                                    <option>Dark Mode</option>
+                                    <option>Auto</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <div class="form-label">Language</div>
+                                <select style="padding: 8px 12px; border: 1px solid #E9ECEF; border-radius: 6px; font-size: 14px; width: 100%;">
+                                    <option>English</option>
+                                    <option>Arabic</option>
+                                    <option>French</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+         const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const loadingContainer = document.getElementById('loadingContainer');
+        const resultContainer = document.getElementById('resultContainer');
+        const errorMessage = document.getElementById('errorMessage');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const newAnalysisBtn = document.getElementById('newAnalysisBtn');
+
+        // API Configuration
+        const API_URL = 'http://127.0.0.1:8000/api/v1/AI/classification';
+        let currentFile = null;
+
+        // Class descriptions mapping
+        const classDescriptions = {
+            'Caries': 'Dental caries (tooth decay) detected. The image shows signs of cavity formation. Professional dental treatment is recommended to prevent further deterioration.',
+            'Gingivitis': 'Gingivitis (gum inflammation) detected. Early-stage gum disease identified. Professional cleaning and improved oral hygiene are recommended.',
+            'Tooth Discoloration': 'Tooth discoloration detected. Staining or color changes observed on tooth surface. Cosmetic dental procedures may improve appearance.',
+            'Ulcer': 'Oral ulcer detected. Lesion or sore identified in the oral cavity. Monitor for healing; consult dentist if persists beyond 2 weeks.',
+            'Hypodontia': 'Hypodontia (missing teeth) detected. Congenital absence of one or more teeth identified. Consultation for orthodontic or prosthetic treatment recommended.',
+            'Normal': 'Normal tooth structure. The AI analysis indicates healthy dental tissue with no visible signs of pathology. Continue regular dental check-ups for maintenance.'
+        };
+
+        // Typing effect
+        const typingText = document.getElementById('typingText');
+        const messages = [
+            'Upload a dental X-ray or photograph for instant AI analysis',
+            'Get accurate diagnostic insights in seconds',
+            'Advanced machine learning for dental care'
+        ];
+        let messageIndex = 0;
+
+        function typeMessage() {
+            const message = messages[messageIndex];
+            let charIndex = 0;
+            typingText.textContent = '';
+            
+            const typeInterval = setInterval(() => {
+                if (charIndex < message.length) {
+                    typingText.textContent += message[charIndex];
+                    charIndex++;
+                } else {
+                    clearInterval(typeInterval);
+                    setTimeout(() => {
+                        messageIndex = (messageIndex + 1) % messages.length;
+                        typeMessage();
+                    }, 3000);
+                }
+            }, 50);
+        }
+
+        typeMessage();
+
+        // Drag and drop
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.classList.remove('dragover');
+            });
+        });
+
+        dropZone.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        analyzeBtn.addEventListener('click', analyzeImage);
+        clearBtn.addEventListener('click', clearImage);
+        newAnalysisBtn.addEventListener('click', clearImage);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    showError('Please upload a valid image file (JPG, PNG, etc.)');
+                    return;
+                }
+
+                // Validate file size (max 10MB)
+                const maxSize = 10 * 1024 * 1024;
+                if (file.size > maxSize) {
+                    showError('File size exceeds 10MB. Please upload a smaller image.');
+                    return;
+                }
+
+                currentFile = file;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewContainer.classList.add('show');
+                    resultContainer.classList.remove('show');
+                    errorMessage.classList.remove('show');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function analyzeImage() {
+            if (!currentFile) {
+                showError('Please select an image first');
+                return;
+            }
+
+            // Show loading state
+            loadingContainer.classList.add('show');
+            previewContainer.classList.remove('show');
+            resultContainer.classList.remove('show');
+            errorMessage.classList.remove('show');
+            analyzeBtn.disabled = true;
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('image', currentFile);
+
+            try {
+                // Make API request
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                console.log(data)
+                // Hide loading
+                loadingContainer.classList.remove('show');
+
+                if (data.success && data.predict) {
+                    // Display results
+                    displayResults(data.predict);
+                } else {
+                    showError(data.message || 'Classification failed. Please try again.');
+                }
+
+            } catch (error) {
+                console.error('API Error:', error);
+                loadingContainer.classList.remove('show');
+                showError('Failed to connect to the server. Please check your connection and try again.');
+            } finally {
+                analyzeBtn.disabled = false;
+            }
+        }
+
+        function displayResults(prediction) {
+            // Get class name
+            const className = prediction;
+            
+            // Get description
+            const description = classDescriptions[className] || 
+                'Analysis complete. Please consult with a dental professional for detailed evaluation and treatment options.';
+
+            // Update UI
+            document.getElementById('diagnosisBadge').textContent = className;
+            document.getElementById('resultText').textContent = description;
+
+            // Show results
+            resultContainer.classList.add('show');
+        }
+
+        function clearImage() {
+            previewContainer.classList.remove('show');
+            resultContainer.classList.remove('show');
+            errorMessage.classList.remove('show');
+            loadingContainer.classList.remove('show');
+            previewImage.src = '';
+            fileInput.value = '';
+            currentFile = null;
+            analyzeBtn.disabled = false;
+        }
+
+        function showError(message) {
+            document.getElementById('errorText').textContent = message;
+            errorMessage.classList.add('show');
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+
+
+
+        const img = document.getElementById("previewImg");
+        const img2 = document.getElementById("previewImgAfter");
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImg");
+        const closeBtn = document.getElementById("closeImage");
+
+        img.addEventListener("click", function () {
+            modal.classList.add("active");
+            modalImg.src = this.src;
+        });
+
+        img2.addEventListener("click", function () {
+            modal.classList.add("active");
+            modalImg.src = this.src;
+        });
+
+
+        closeBtn.addEventListener("click", function () {
+            modal.classList.remove("active");
+        });
+
+        modal.addEventListener("click", function (e) {
+            if (e.target === modal) {
+                modal.classList.remove("active");
+            }
+        });
+
+        
+
+   const API_CONFIG = { 
+    BASE_URL: "http://127.0.0.1:8000/api/v1",
+    ENDPOINTS: {
+        DATA: "/student"
+    }
+};
+
+// Declare department variable at the top level
+let department = null;
+
+const urlParams = new URLSearchParams(window.location.search);
+const studentId = urlParams.get("student_id");
+
+console.log("Student ID from URL:", studentId);
+
+async function fetchStudent(studentId) {
+    try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DATA}/${studentId}`);
+        console.log("Fetch response:", response);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log("Result JSON:", result);
+
+        if (result.success) {
+            const student = result.data;
+            console.log("Student Data:", student);
+
+            document.getElementById("studentNameHead").innerText = student.name || "-";
+            document.getElementById("studentIDHead").innerText = student.student_id || "-";
+            document.getElementById("studentBatchHead").innerText = student.batch_id || "-";
+            document.getElementById("studentdepartmentHead").innerText = student.department_id || "-";
+            document.getElementById("studentEmailHead").innerText = student.email || "-";
+        
+            // Store department in the global variable
+            department = student.department_id;
+            console.log("Department stored:", department);
+            
+            return student.department_id;
+        } else {
+            alert(result.message);
+            return null;
+        }
+    } catch (err) {
+        console.error("Error fetching student:", err);
+        return null;
+    }
+}
+
+if (studentId) {
+    fetchStudent(studentId);
+} else {
+    console.warn("No student_id in URL");
+}
+
+async function loadPatients() {
+    try {
+        console.log("Using department variable:", department);
+
+        const response = await fetch(`http://127.0.0.1:8000/api/patients/${department}`);
+        const data = await response.json();
+
+        const patientList = document.querySelector(".patient-list");
+        patientList.innerHTML = ""; 
+
+        // Update subtitle with count
+        document.querySelector(".queue-subtitle").textContent = 
+            `${data.patients.length} patients today`;
+
+        data.patients.forEach((patient, index) => {
+            const card = document.createElement("div");
+            card.classList.add("patient-card");
+            if (index === 0) card.classList.add("active");
+            card.dataset.patient = patient.case_id;
+
+            card.innerHTML = `
+                <div class="patient-avatar">${patient.name[0]}</div>
+                <div class="patient-info">
+                    <div class="patient-name">${patient.name}</div>
+                    <div class="patient-date">Registered: ${patient.appointment_date}</div>
+                </div>
+            `;
+
+            patientList.appendChild(card);
+
+            card.addEventListener("click", () => {
+                document.querySelectorAll(".patient-card")
+                        .forEach(c => c.classList.remove("active"));
+                card.classList.add("active");
+                updatePatientDetails(patient);
+            });
+        });
+
+        if (data.patients.length > 0) {
+            updatePatientDetails(data.patients[0]);
+        }
+
+    } catch (error) {
+        console.error("Error loading patients:", error);
+    }
+}
+
+function updatePatientDetails(patient) {
+    document.querySelector(".patient-header-avatar").textContent = patient.name[0];
+    document.querySelector(".patient-header-info h1").textContent = patient.name;
+
+    const formValues = document.querySelectorAll(".form-value.queue");
+    if (formValues.length >= 5) {
+        formValues[0].textContent = patient.case_id;
+        formValues[1].textContent = patient.gender;
+        formValues[2].textContent = patient.phone;
+        formValues[3].textContent = patient.age;
+        formValues[4].textContent = patient.sick;
+
+    }
+
+    document.querySelector(".info-card p").textContent = patient.description;
+}
+
+document.addEventListener("DOMContentLoaded", loadPatients);
+
+async function init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get("student_id");
+
+    if (!studentId) {
+        console.warn("No student_id in URL");
+        return;
+    }
+
+    const fetchedDepartment = await fetchStudent(studentId);
+    department = fetchedDepartment;
+    
+    async function loadStudentCases(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/student/cases/table/${studentId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            currentProcess = result.table.map(item => ({
+                 ID: item.case_id,
+                name: item.name || "",
+                description: item.description || "",
+                treatment: item.treatment || "",
+                before: item.before_photo || "",
+                after: item.after_photo || "",
+                depart: item.department_id,
+                date: item.appointment_date || "",
+                approval: item.checked,
+                department_reffere: item.department_reffere || "",
+                notes: item.notes || ""  
+            }));
+
+            console.log("Cases loaded:", currentProcess);
+            populateFeedbackTable();
+        } else {
+            alert(result.message);
+        }
+    } catch (err) {
+        console.error("Error loading student cases:", err);
+    }
+}
+    console.log("Using department variable:", department);
+     await loadPatients();
+    populateFeedbackTable();
+
+    await loadStudentCases(studentId);
+}
+
+async function postEditCase(event) {
+    event.preventDefault();
+    
+    try {
+        const student_case_id = document.getElementById("studentIDHead").innerText;
+        const case_id = document.getElementById("editPatientName").value;
+        const department_id = document.getElementById("studentdepartmentHead").innerText
+        const description = document.getElementById("editPatientdis").value;
+        const treatment = document.getElementById("edittreatment").value;
+        const department = document.getElementById("editDepartment").value;
+        const date = document.getElementById("editDate").value;
+
+        console.log("=== Debug: Form Data ===");
+        console.log("Student Case ID:", student_case_id);
+        console.log("Case ID:", case_id);
+        console.log("Description:", description);
+        console.log("Treatment:", treatment);
+        console.log("Department:", department);
+        console.log("Date:", date);
+
+        const before = document.getElementById("before-upload").files[0];
+        const after = document.getElementById("after-upload").files[0];
+
+        console.log("Before file:", before ? before.name : "No file");
+        console.log("After file:", after ? after.name : "No file");
+
+        const formData = new FormData();
+        formData.append("student_id", student_case_id);
+        formData.append("case_id", case_id);
+        formData.append("department_id", department_id);
+        formData.append("description", description);
+        formData.append("treatment", treatment);
+        formData.append("department", department);
+        formData.append("date", date);
+        
+        if (before) {
+            formData.append("before", before);
+        }
+        if (after) {
+            formData.append("after", after);
+        }
+
+        console.log("=== FormData Contents ===");
+        for (let [key, value] of formData.entries()) {
+            if (value instanceof File) {
+                console.log(key, ":", value.name, `(${value.size} bytes)`);
+            } else {
+                console.log(key, ":", value);
+            }
+        }
+        console.log("========================");
+
+        console.log("Sending request...");
+        const response = await fetch("http://127.0.0.1:8000/api/v1/edit/case", {
+            method: "POST",
+            body: formData
+        });
+
+        console.log("Response status:", response.status);
+
+        const result = await response.json();
+        console.log("Response data:", result);
+
+        if (response.ok && result.success) {
+            alert("Case updated successfully!");
+        } else {
+            alert("Failed: " + (result.message || "Unknown error"));
+        }
+
+    } catch (error) {
+        console.error("❌ Error:", error);
+        alert("Something went wrong! Check console for details.");
+    }
+}
+
+async function loadStudentCases(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/student/cases/table/${studentId}`);
+        const result = await response.json();
+
+        if (result.success) {
+           currentProcess = result.table.map(item => {
+            console.log("Item:", item);
+            return {
+                ID: item.case_id,
+                name: item.name || "",
+                description: item.description || "",
+                treatment: item.treatment || "",
+                before: item.before_photo || "",
+                after: item.after_photo || "",
+                depart: item.department_id,
+                date: item.appointment_date || "",
+                approval: item.checked,
+                department_reffere: item.department_reffere || "",
+                notes: item.notes || ""  
+            };
+        });
+
+            console.log("Cases loaded:", currentProcess);
+            populateFeedbackTable();
+        } else {
+            alert(result.message);
+        }
+    } catch (err) {
+        console.error("Error loading student cases:", err);
+    }
+}
+
+// Global variables for modal functions
+let editIndex = null;
+let currentProcess = [];
+
+// Global modal functions - accessible from HTML onclick
+function openViewModal(index) {
+    const patient = currentProcess[index];
+    const modal = document.getElementById("viewModal");
+    modal.style.display = "flex";
+
+    if (department === "d001") {
+        document.querySelector(".form-group.after_view").style.display = "none";
+        document.querySelector(".form-group.treatment_view").style.display = "none";
+        
+        document.getElementById("viewPatientid").value = patient.ID;
+        document.getElementById("viewdescription").value = patient.description || "Unknown";
+        document.getElementById("previewImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("viewDepartment").value = patient.department_reffere || "";
+        document.getElementById("viewDate").value = patient.date || "";
+    } else {
+        document.querySelector(".form-group.department_view").style.display = "none";
+        document.querySelector(".form-group.date_view").style.display = "none";
+        document.getElementById("previewImg").src = `/static/uploads/${patient.before}`;
+        document.getElementById("previewImgAfter").src = `/static/uploads/${patient.after}`;
+        document.getElementById("viewPatientid").value = patient.ID;
+        document.getElementById("viewdescription").value = patient.description || "";
+        document.getElementById("viewTreatment").value = patient.treatment || "";
+        document.getElementById("viewPhone").value = patient.phone || "";
+        document.getElementById("viewEmail").value = patient.treatment || "";
+        document.getElementById("viewAddress").value = patient.address || "";
+    }
+}
+
+function openNotesModal(index) {
+    const patient = currentProcess[index];
+    console.log("Opening notes for:", patient);
+    console.log("Notes value:", patient.notes);
+    const modal = document.getElementById("notesModal");
+    modal.style.display = "flex";
+
+    if (department === "d001") {
+        document.getElementById("ViewNotes").value = patient.notes || "";
+    } else {
+        document.getElementById("ViewNotes").value = patient.notes || "";
+    }
+}
+
+function openEditModal(index) {
+    editIndex = index;
+    const patient = currentProcess[index];
+    const modal = document.getElementById("editModal");
+    modal.style.display = "flex";
+
+    if (department === "d001") {
+        document.querySelector(".form-group.dep").style.display = "block";
+        document.querySelector(".form-group.calendar").style.display = "block";
+        document.querySelector(".form-group.after").style.display = "none";
+        document.querySelector(".form-group.treatment").style.display = "none";
+        
+        document.getElementById("editPatientName").value = patient.ID;
+        document.getElementById("editPatientdis").value = patient.description || "";
+        document.getElementById("edittreatment").value = patient.treatment || "";
+        document.getElementById("editDepartment").value = patient.depart || "";
+        document.getElementById("editDate").value = patient.date || "";
+    } else {
+        document.getElementById("editPatientName").value = patient.ID;
+        document.getElementById("editPatientdis").value = patient.description || "";
+        document.getElementById("edittreatment").value = patient.treatment || "";
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = "none";
+}
+
+function populateFeedbackTable() {
+    const tableBody = document.getElementById('feedbackTable');
+    tableBody.innerHTML = '';
+
+    currentProcess.forEach((feedback, index) => {
+        const row = document.createElement('tr');
+        let approvalClass = "";
+        let approvalText = "";
+
+        if (feedback.approval === "1") {
+            approvalClass = "approval-ok";
+            approvalText = "Approved";
+        } else if (feedback.approval === "-1") {
+            approvalClass = "approval-pending";
+            approvalText = "Pending";
+        } else if (feedback.approval === "0") {
+            approvalClass = "approval-no";
+            approvalText = "Rejected";
+        }
+        console.log("Row:", feedback.ID, "Approval:", feedback.approval, "Class:", approvalClass);
+
+        row.innerHTML = `
+        <td><strong>${feedback.ID}</strong></td>
+        <td>${feedback.name}</td>
+        <td style="max-width: 300px;">
+            <p style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${feedback.description}</p>
+        </td>
+        <td class="${approvalClass}">${approvalText}</td>
+        <td>
+            <div class="action-buttons">
+                <button class="action-btn view" title="View Details" onclick="openNotesModal(${index})">
+                    <i class="fa-solid fa-comment"></i>
+                </button>
+                <button class="action-btn view" title="View Details" onclick="openViewModal(${index})">
+                    <i class="fas fa-eye"></i>
+                </button>
+                <button class="action-btn edit" title="Edit Feedback" onclick="openEditModal(${index})">
+                    <i class="fas fa-edit"></i>
+                </button>
+            </div>
+        </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+async function sendPatientData() {
+    studetnt_case_id = document.getElementById("case_id").innerText
+    studetnt_department_id = document.getElementById("studentdepartmentHead").innerText
+    studetnt_student_id = document.getElementById("studentIDHead").innerText
+
+    console.log(studetnt_case_id, studetnt_department_id, studetnt_student_id )
+
+    try{
+        const  response = await fetch("http://127.0.0.1:8000/api/v1/student/patient", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                case_id: studetnt_case_id,
+                department_id: studetnt_department_id,
+                student_id: studetnt_student_id
+            })
+        });
+
+        const result = await response.json();
+
+         if (result.success) {
+            alert("Added successfully!");
+        } else {
+            alert("Failed: " + result.message);
+        }
+        } catch (error) {
+        console.error("Error:", error);
+        alert("Something went wrong!");
+    }
+}
+
+document.getElementById("addPatientBtn").addEventListener("click", sendPatientData);
+
+async function typeMarkdown(element, markdownText, speed = 10) {
+    return new Promise((resolve) => {
+        const tempDiv = document.createElement('div');
+        tempDiv.style.visibility = 'hidden';
+        tempDiv.style.position = 'absolute';
+        tempDiv.innerHTML = marked.parse(markdownText);
+        document.body.appendChild(tempDiv);
+        
+        const finalHeight = tempDiv.offsetHeight;
+        element.style.minHeight = finalHeight + 'px';
+        element.style.transition = 'none';
+        
+        document.body.removeChild(tempDiv);
+        
+        const words = markdownText.split(' ');
+        let currentIndex = 0;
+        element.innerHTML = '';
+        
+        function typeWord() {
+            if (currentIndex < words.length) {
+                const currentText = words.slice(0, currentIndex + 1).join(' ');
+                element.innerHTML = marked.parse(currentText);
+                currentIndex++;
+                setTimeout(typeWord, speed);
+            } else {
+                element.style.minHeight = 'auto';
+                element.style.transition = '';
+                resolve();
+            }
+        }
+        typeWord();
+    });
+}
+
+init();
+
+function handleFileUpload(inputId) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+
+  let label = document.querySelector(`label.photo-btn[for="${inputId}"]`);
+
+  if (!label) {
+    const group = input.closest('.form-group');
+    if (group) label = group.querySelector('label');
+  }
+
+  if (!label) {
+    label = document.querySelector(`label[for="${inputId}"]`);
+  }
+
+  if (!label) return;
+
+  if (!label.getAttribute('data-default')) {
+    label.setAttribute('data-default', label.innerHTML.trim());
+  }
+
+  input.addEventListener('change', () => {
+    if (input.files && input.files.length > 0) {
+      label.classList.add('uploaded');
+
+      const fileName = input.files[0].name;
+      label.innerHTML = `<i class="fa-solid fa-camera"></i> <span class="label-text">${fileName}</span>`;
+
+      label.style.background = '#28a745';
+      label.style.color = '#fff';
+    } else {
+      label.classList.remove('uploaded');
+      label.innerHTML = label.getAttribute('data-default') || '';
+      label.style.background = '';
+      label.style.color = '';
+    }
+  });
+}
+
+handleFileUpload('before-upload');
+handleFileUpload('after-upload');
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const patientQueue = document.getElementById('patientQueue');
+        const mainContent = document.getElementById('mainContent');
+        const patientCards = document.querySelectorAll('.patient-card');
+        const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+        const pageSections = document.querySelectorAll('.page-section');
+
+        // Navigation functionality
+         sidebarIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                const targetPage = icon.dataset.page;
+                
+                sidebarIcons.forEach(i => i.classList.remove('active'));
+                pageSections.forEach(section => section.classList.remove('active'));
+                
+                icon.classList.add('active');
+                const targetSection = document.getElementById(targetPage);
+                if (targetSection) {
+                    targetSection.classList.add('active');
+                }
+                
+                if (targetPage === 'patients') {
+                    patientQueue.classList.add('show');
+                    mainContent.classList.add('with-patient-queue');
+                } else {
+                    patientQueue.classList.remove('show');
+                    mainContent.classList.remove('with-patient-queue');
+                }
+                
+                createRipple(icon);
+                
+                setTimeout(() => {
+                    targetSection.style.opacity = '0';
+                    targetSection.style.transform = 'translateY(20px)';
+                    
+                    setTimeout(() => {
+                        targetSection.style.transition = 'all 0.3s ease';
+                        targetSection.style.opacity = '1';
+                        targetSection.style.transform = 'translateY(0)';
+                    }, 50);
+                }, 100);
+            });
+        });
+
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('expanded');
+            const icon = sidebarToggle.querySelector('i');
+            
+            if (sidebar.classList.contains('expanded')) {
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                icon.style.transform = 'rotate(0deg)';
+            }
+        });
+        
+        document.querySelectorAll('.sidebar-icon').forEach(icon => {
+            icon.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-icon').forEach(i => i.classList.remove('active'));
+                
+                icon.classList.add('active');
+                
+                document.querySelectorAll('.page-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                const pageId = icon.getAttribute('data-page');
+                const pageSection = document.getElementById(pageId);
+                if (pageSection) {
+                    pageSection.style.display = 'block';
+                    
+                    if (pageId === 'reports') {
+                        initializeCharts();
+                    }
+                }
+            });
+        });
+
+        // Ripple effect function
+        function createRipple(element) {
+            const ripple = document.createElement('span');
+            const rect = element.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            
+            ripple.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.3);
+                transform: scale(0);
+                animation: ripple 0.6s linear;
+                top: 50%;
+                left: 50%;
+                margin-top: ${-size / 2}px;
+                margin-left: ${-size / 2}px;
+                pointer-events: none;
+            `;
+            
+            element.style.position = 'relative';
+            element.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        }
+        
+        // Chart instances object
+        let chartInstances = {};
+        
+        // Initialize charts for Reports section
+        function initializeCharts() {
+            Object.values(chartInstances).forEach(chart => {
+                if (chart) chart.destroy();
+            });
+            chartInstances = {};
+            
+            const sampleData = Array.from({length: 50}, (_, i) => ({
+                id: i + 1,
+                name: `Patient ${i + 1}`,
+                department: ['Cardiology', 'Neurology', 'Orthopedics', 'Pediatrics'][Math.floor(Math.random() * 4)],
+                date: new Date(2025, 0, Math.floor(Math.random() * 30) + 1).toISOString(),
+                status: ['Approved', 'Pending', 'Rejected'][Math.floor(Math.random() * 3)],
+                treatment: ['Root Canal', 'Cleaning', 'Filling', 'Surgery', 'Consultation'][Math.floor(Math.random() * 5)],
+                gender: ['Male', 'Female'][Math.floor(Math.random() * 2)]
+            }));
+            
+            createStatusChart(sampleData);
+            createTrendChart(sampleData);
+            
+    if (studentId) {
+        loadlTreatment(studentId);  // ✅ مرر الـ studentId
+    }
+            if (studentId) {
+        loadGenderStats(studentId);  // ✅ مرر الـ studentId
+    }
+    if (studentId) {
+        loadCheckedStats(studentId);  // ✅ مرر الـ studentId
+    }
+    if (studentId) {
+        loadCaseByDepartmentStats(studentId);  // ✅ مرر الـ studentId
+    }
+        }
+  ////////////////////////////////////////////////////////////////////////////////        
+  async function loadCheckedStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/checked/${studentId}`);
+        const result = await response.json();
+
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const num_of_rejectied = result["num_of_rejectied"] || 0;
+            const num_of_pending = result["num_of_pending"] || 0;
+            const num_of_approved = result["num_of_approved"] || 0;
+
+            console.log("num_of_rejectied:", num_of_rejectied, "num_of_rejectied:", num_of_rejectied,"num_of_approved:", num_of_approved);
+            createStatusChart(num_of_pending,num_of_rejectied,num_of_approved)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching data:", error);
+    }
+}
+  
+
+        function createStatusChart(num_of_pending,num_of_rejectied,num_of_approved) {
+            // Make sure the canvas element exists
+            const canvas = document.getElementById('statusChart');
+            if (!canvas) {
+                console.error('Status chart canvas not found');
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.statusChart) {
+                chartInstances.statusChart.destroy();
+            }
+            
+            chartInstances.statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected'],
+                    datasets: [{
+                        data: [num_of_approved || 0, num_of_pending || 0, num_of_rejectied || 0],
+                        backgroundColor: ['#38a169', '#ecc94b', '#e53e3e'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { padding: 20, font: { size: 13 } } }
+                    }
+                }
+            });
+        }
+  ////////////////////////////////////////////////////////////////////////////////      
+    async function loadCaseByDepartmentStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/case_by_department/${studentId}`);
+        const result = await response.json();
+
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const list_Departments = result["list_Departments"] || 0;
+            const list_number_cases = result["list_number_cases"] || 0;
+
+            console.log("list_Departments:", list_Departments, "list_number_cases:", list_number_cases);
+            createDepartmentChart(list_Departments,list_number_cases)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}      
+        
+        function createDepartmentChart(list_Departments,list_number_cases) {
+            
+            const canvas = document.getElementById('departmentChart');
+            if (!canvas) {
+                console.error('Department chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.departmentChart) {
+                chartInstances.departmentChart.destroy();
+            }
+            
+            chartInstances.departmentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: list_Departments,
+                    datasets: [{
+                        label: 'Cases by Department',
+                        data: list_number_cases,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderRadius: 6,
+                        borderWidth: 2,
+                        borderColor: 'rgba(102, 126, 234, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+///////////////////////////////////////////////////////////////////////////////////////////        
+        function createTrendChart(data) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const approved = months.map(() => Math.floor(Math.random() * 30) + 10);
+            const pending = months.map(() => Math.floor(Math.random() * 20) + 5);
+            const rejected = months.map(() => Math.floor(Math.random() * 10) + 2);
+
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) {
+                console.error('Trend chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.trendChart) {
+                chartInstances.trendChart.destroy();
+            }
+            chartInstances.trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months,
+                    datasets: [
+                        {
+                            label: 'Approved',
+                            data: approved,
+                            borderColor: '#38a169',
+                            backgroundColor: 'rgba(56, 161, 105, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Pending',
+                            data: pending,
+                            borderColor: '#ecc94b',
+                            backgroundColor: 'rgba(236, 201, 75, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Rejected',
+                            data: rejected,
+                            borderColor: '#e53e3e',
+                            backgroundColor: 'rgba(229, 62, 62, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+///////////////////////////////////////////////////////////////////////////////////////////////////// 
+        async function loadlTreatment(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/Treatment/${studentId}`);
+        const result = await response.json();
+
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const list_Treatment = result["list_Treatment"] || [];
+            const list_number_cases = result["list_number_cases"] || 0;
+
+            console.log("list_Treatment:", list_Treatment, "list_number_cases:", list_number_cases);
+            createTreatmentChart(list_Treatment,list_number_cases)
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}      
+
+
+        function createTreatmentChart(list_Treatment,list_number_cases) {
+
+            const canvas = document.getElementById('treatmentChart');
+            if (!canvas) {
+                console.error('Treatment chart canvas not found');
+                return;
+            }
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (chartInstances.treatmentChart) {
+                chartInstances.treatmentChart.destroy();
+            }
+            chartInstances.treatmentChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: list_Treatment,
+                    datasets: [{
+                        data: list_number_cases,
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.7)',
+                            'rgba(56, 161, 105, 0.7)',
+                            'rgba(236, 201, 75, 0.7)',
+                            'rgba(229, 62, 62, 0.7)',
+                            'rgba(159, 122, 234, 0.7)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+/////////////////////////////////////////////////////////////////////////////////////////
+       async function loadGenderStats(studentId) {
+    try {
+        const response = await fetch(`http://127.0.0.1:8000/api/home/analyize/cases/${studentId}`);
+        const result = await response.json();
+
+        console.log("Gender Stats Response:", result);
+
+        if (result.success) {
+            const females = result["num of Females"] || 0;
+            const males = result["num of Males"] || 0;
+
+            console.log("Males:", males, "Females:", females);
+            createGenderChart(males, females);
+        } else {
+            console.error("Invalid response structure:", result);
+        }
+    } catch (error) {
+        console.error("Error fetching gender data:", error);
+    }
+}
+
+
+        function createGenderChart(males, females) {
+            const ctx = document.getElementById('genderChart');
+            
+            if (!ctx) {
+                console.error("Gender chart canvas not found!");
+                return;
+            }
+
+            if (chartInstances.genderChart) {
+                chartInstances.genderChart.destroy();
+            }
+
+            chartInstances.genderChart = new Chart(ctx.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: ['Male', 'Female'],
+                    datasets: [{
+                        data: [males, females],
+                        backgroundColor: ['#4facfe', '#f093fb'],
+                        borderWidth: 3,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: { size: 13, weight: 'bold' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.parsed || 0;
+                                    const total = males + females;
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+///////////////////////////////////////////////////////////////////////////////////
+        // Add ripple animation keyframes
+        const rippleStyle = document.createElement('style');
+        rippleStyle.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(rippleStyle);
+
+        // Button interactions
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.action-btn')) {
+                const btn = e.target.closest('.action-btn');
+                createRipple(btn);
+                
+                btn.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    btn.style.transform = '';
+                }, 150);
+            }
+        });
+        
+        populateFeedbackTable();
+
+        // Initialize page with animation
+        window.addEventListener('load', () => {
+            const activeSection = document.querySelector('.page-section.active');
+            if (activeSection) {
+                activeSection.style.opacity = '0';
+                activeSection.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    activeSection.style.transition = 'all 0.6s ease';
+                    activeSection.style.opacity = '1';
+                    activeSection.style.transform = 'translateY(0)';
+                }, 100);
+            }
+        });
+
+        // Mobile responsiveness
+        function handleResize() {
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('expanded');
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize();
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains("modal")) {
+                event.target.style.display = "none";
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# استبعاد فولدر الموديل الكبير
+SciReason-LFM2-2.6B/
+
+# استبعاد ملفات تانية مالهاش لازمة
+__pycache__/
+*.pyc
+
+
+test.py
+dentistry.pdf
+dental_project_DB.sqbpro
