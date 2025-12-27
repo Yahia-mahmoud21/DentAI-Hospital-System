@@ -1,103 +1,129 @@
-# 🦷 DentAI Hospital System Features Document
+# 🦷 DentAl Hospital System
+---
+![System Overview](photos/main.png)
 
-## 1. System Overview
-A fully integrated web system for managing the workflow in a  **Assuit University Dental Hospital**, built using **FastAPI**.  
-The system includes a **Deep Learning** model to classify dental diseases from images and provides multiple user interfaces according to each user role in the hospital.
+
+## 🦷 Project Overview
+The **DentAl Hospital System** is an intelligent, unified healthcare management platform designed for the **Faculty of Dentistry**.  
+It aims to revolutionize dental education and patient care by integrating **Artificial Intelligence (AI)** with modern web technologies.
+
+The system creates a seamless ecosystem that:
+- Enhances learning outcomes for students  
+- Streamlines clinical workflows  
+- Improves the overall patient experience  
 
 ---
 
-## 2. Artificial Intelligence (AI) Module
+##  Key Intelligent Features
 
-### A. Dental Disease Classification
+The platform incorporates two core AI-driven components:
 
-- **Model Used:**  
-  A **ResNet-50** deep learning model trained to classify **6 types** of dental diseases.
+###  Deep-Learning Image Classification Model
+Assists in diagnosing **six dental conditions** with high accuracy:
+- **Calculus** (الجير)
+- **Caries** (التسوس)
+- **Gingivitis** (التهاب اللثة)
+- **Hypodontia** (نقص عدد الأسنان)
+- **Mouth Ulcers** (قرحة الفم)
+- **Tooth Discoloration** (تغير لون الأسنان)
 
-- **Supported Diseases:**
-  1. Calculus  
-  2. Dental Caries  
-  3. Gingivitis  
-  4. Hypodontia (Congenital missing teeth)  
-  5. Mouth Ulcer  
-  6. Tooth Discoloration
+<p align="center">
+  <img src="photos/AI_C.png" width="45%" />
+  <img src="photos/AI_C_after.png" width="45%" />
+</p>
 
-- **User Interface:**  
-  The `AI` page provides a simple drag-and-drop interface to upload tooth images and get an instant diagnosis.
 
-- **API Endpoint:**  
-  Allows developers to integrate the classification service with other systems.
+
+---
+###  Dental AI Chatbot (SciReason-LFM2-2.6B)
+- Fine-tuned **Large Language Model (LLM)** based on **LiquidAI**
+- Trained using **Unsloth** on scientific reasoning datasets
+- Uses a **RAG (Retrieval-Augmented Generation)** pipeline
+- Provides **evidence-based clinical answers** using real medical knowledge stored in the system
+
+![LLM](photos/AI_LLM.png)
+---
+
+## 👥 Stakeholders & Features
+
+### 1️⃣ College Administration
+- **User Management:** Add students, assign unique passwords, and manage specialist doctor data  
+- **Academic Organization:** Create student batches and assign students to supervising doctors  
+- **Reporting:** Generate detailed student performance reports and track case distribution  
+![System Overview](photos/College.png)
 
 ---
 
-### B. Intelligent Medical Assistant (AI Chat)
-
-An integrated chat interface inside the AI page that allows users to interact with a virtual assistant.  
-The assistant is trained on medical data to provide accurate dental-related responses.
-
----
-
-## 3. Features by User Role
-
-### A. Secretary
-
-**Dashboard `book`:**
-- Add new patients.  
-- View a waiting list of new unassigned cases.  
-- Edit patient data (name, age, contact info, etc.).
+### 2️⃣ Secretaries
+- **Patient Registration:** Register new patients in the system  
+- **Automated Documentation:** Generate printable patient information sheets  
+![System Overview](photos/sec.png)
 
 ---
 
-### B. Student
+### 3️⃣ Internship Students (Excellence Year)
+Students are distributed across **10 medical departments**.
 
-- **Login & Registration Page:**  
-  Students can create an account linked to their university ID.
+- **Diagnostic Workflow:**  
+  - Receive patients  
+  - Perform initial diagnosis  
+  - Capture *Before* photos  
+  - Assign cases to treatment departments  
+![System Overview](photos/patientqueue.png)
 
-- **Dashboard `student`:**
-  - View personal and academic information.  
-  - View available cases in their department.  
-  - **Case Management:**
-    - Assign a case to themselves.  
-    - Edit case details (description, treatment plan, before/after photos).  
-    - Refer the case to another department if needed.  
-    - View supervisor feedback on approved or rejected cases.  
-  - **Analytics & Dashboard:**
-    - Case distribution by patient gender.  
-    - Case status (Approved / Rejected / Under Review).  
-    - Number of cases per department.  
-    - Most common treatment types.
+- **Treatment Workflow:**  
+  - Review transferred cases  
+  - Apply treatment plans  
+  - Capture *After* photos  
+
+- **Performance Dashboard:**  
+  - Total cases count  
+  - Approved / Rejected cases  
+  - Visual analytics and progress charts  
+<p align="center">
+  <img src="photos/viewpatient.png" width="45%" />
+  <img src="photos/Student.png" width="45%" />
+</p>
+---
+
+### 4️⃣ Specialist Doctors & Teaching Assistants
+- **Case Review:** View student-submitted cases with photos and clinical notes  
+- **Clinical Oversight:** Approve, reject, or modify diagnoses and treatments  
+- **Student Monitoring:** Track performance and case load of supervised students  
+![System Overview](photos/Doc.png)
 
 ---
 
-### C. Doctor
-
-- **Login Page:** Secure login portal for doctors.  
-- **Dashboard `/doctor`:**
-  - View personal and department information.  
-  - Review cases submitted by students.  
-  - **Decision Options:**
-    - ✅ **Approve:** Accept the student’s treatment plan.  
-    - ❌ **Refuse:** Reject the case and add comments for guidance.  
-    - 🔄 **Referral:** Refer the case to another department.
-- **Analytics Dashboard**
+### 5️⃣ Patients
+- **Secure Access:** Login using Patient ID or Phone Number  
+- **Digital Health Records:** View diagnosis and treatment history  
+- **Downloadable Reports:** Generate and download medical reports as **PDF files**  
 
 ---
 
-### D. College Administration
+##  Tech Stack
 
-**Dashboard `/college`:**
-- View overall statistics (batches, doctors, students, departments, rotations).  
-- Manage tables (view, filter, and sort data).  
-- **Import & Export Data** from or to Excel files.  
-- Manage departments and assign department heads.
-
----
-
-### E. Patient
-
-- **Patient Portal `patient`:**  
-  Login using the case number and phone number.  
-- **Case Details:**  
-  View their treatment progress and **download the medical report as a PDF**.
+- **Backend:** FastAPI (Python)  
+- **Frontend:** HTML, CSS, JavaScript  
+- **Database:** SQL  
+- **AI / ML:** PyTorch, Unsloth, LiquidAI (LFM2-2.6B)  
+- **Data Processing:** Pandas, NumPy  
 
 ---
 
+##  System Workflow
+
+1. **Entry:** Secretary registers the patient and prints an ID sheet  
+2. **Diagnosis:** Diagnostic intern performs an initial assessment with AI support  
+3. **Approval:** Specialist reviews and approves the diagnosis  
+4. **Treatment:** Case is transferred to a treatment department intern  
+5. **Final Review:** Specialist approves the completed case  
+
+---
+
+##  Developed By
+- **Abdelrahman Ali**  
+- **Yahia Mahmoud**  
+- **Ahmed Saad**  
+- **Yahya Mohammed**  
+- **David Mamdouh**
